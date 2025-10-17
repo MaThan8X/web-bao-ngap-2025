@@ -1,0 +1,29 @@
+# ftp-deploy.yml (Ver 01 - Dự án Web Báo Ngập 2025)
+# - Cấu hình để triển khai tự động cho repository mới.
+# - Sửa đổi lệnh 'mirror' để tải lên toàn bộ nội dung của repository
+#   thay vì chỉ thư mục 'htdocs' như trước.
+
+name: Deploy to FTP Host
+
+# Kích hoạt khi có code được đẩy lên nhánh 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ftp-deploy:
+    name: FTP Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via lftp
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Đường dẫn đến thư mục dự án mới trên hosting
+          remote-path: ${{ secrets.FTP_REMOTE_PATH }}
