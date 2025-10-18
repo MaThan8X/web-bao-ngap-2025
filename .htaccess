@@ -1,4 +1,4 @@
-# .htaccess (Ver 01 - Fix lỗi chuyển hướng)
+# .htaccess (Ver 01 - Fix lỗi chuyển hướng).
 # Ép buộc server hiển thị index.html khi truy cập vào thư mục
 # Đảm bảo index.html là trang mặc định cho thư mục này.
 AddHandler application/x-httpd-php .php
