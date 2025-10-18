@@ -1,7 +1,7 @@
 # ftp-deploy.yml (Ver 02 - Dự án Web Báo Ngập 2025)
 # - Thay thế logic lftp thủ công bằng cách sử dụng đúng action SamKirkland/FTP-Deploy-Action.
 # - Đảm bảo toàn bộ nội dung repository (gồm send-data.php, index.html, v.v...) được triển khai.
-# pass chuẩn
+# pass chuẩn 01
 name: Deploy to FTP Host
 # Kích hoạt khi có code được đẩy lên nhánh 'main'
 on:
