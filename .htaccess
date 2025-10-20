@@ -1,10 +1,5 @@
-# .htaccess (Ver 04 - Fix PHP Handler Tuyệt đối và Index)
-# - Đảm bảo index.html là trang mặc định.
-# - Ép buộc server thực thi PHP bằng handler cụ thể cho gói hosting này.
+# .htaccess (Ver 04 - Clean Up)
+# - Xóa tất cả các lệnh PHP Handler đã thất bại (ForceType, AddHandler).
+# - Chỉ giữ lại lệnh hiển thị index.html mặc định.
 
 DirectoryIndex index.html
-
-# Cấu hình này dựa trên PHP Path: /home/sysphp
-<FilesMatch "\.php$">
-    SetHandler application/x-httpd-php
-</FilesMatch>
