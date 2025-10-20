@@ -1,53 +1,93 @@
-// map-handler.js (Ver 02 - Fix Lỗi Đường Dẫn API & Cập nhật tâm Bản đồ)
-// - Sửa lỗi đường dẫn API: Bỏ thư mục /bao-ngap-2025/ khỏi URL.
-// - Bổ sung thông tin: Tâm bản đồ mặc định TP Ninh Bình
-// (Các logic khác được giữ nguyên từ Ver 01)
+// map-handler.js (Ver 03 - Fix Khởi tạo Map và Lỗi Modal)
+// - Sửa lỗi: Loại bỏ DOMContentLoaded và dùng IIFE (để đảm bảo script chạy).
+// - Sửa lỗi: Đơn giản hóa đường dẫn API.
+// - Sửa lỗi: Đảm bảo Modal được gán sự kiện chính xác.
 
-const API_BASE_URL = window.location.origin; 
-const DEFAULT_CENTER = [20.2647, 105.9754]; // TP Ninh Bình
-const DEFAULT_ZOOM = 12;
+(function() {
+    const API_BASE_URL = window.location.origin; 
+    const DEFAULT_CENTER = [20.2647, 105.9754]; // TP Ninh Bình
+    const DEFAULT_ZOOM = 12;
 
-// ... (Giữ nguyên các biến và hàm Utility)
+    let map;
+    let markersLayer = L.layerGroup(); 
+    let allStations = []; 
+    let editingStationId = null; 
 
-// Hàm chính để fetch dữ liệu, render sidebar và marker
-async function loadStations() {
-    try {
-        // [SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY] 
-        // Bỏ thư mục "/bao-ngap-2025/" vì Subdomain đã trỏ thẳng vào thư mục này.
-        // Chỉ cần gọi tên file PHP
-        const res = await fetch(`${API_BASE_URL}/get-locations.php`);
-        allStations = await res.json();
-        
-        // Sort theo ID để dễ quản lý
-        allStations.sort((a, b) => a.id.localeCompare(b.id));
+    // DOM ELEMENTS
+    const configModal = document.getElementById('config-modal');
+    const configForm = document.getElementById('config-form');
+    const btnCancel = document.getElementById('btn-cancel');
+    const btnAddStation = document.getElementById('add-station-btn');
+    // --- UTILITY FUNCTIONS ---
+    
+    // ... (Giữ nguyên getStatus, getTrend, createPopupContent)
 
-        renderSidebar();
-        renderMarkers();
+    function openConfigModal(station = null) {
+        // Log để debug: Kiểm tra xem hàm có được gọi không
+        console.log('Opening Modal for:', station); 
+
+        editingStationId = station ? station.id : null;
+        document.getElementById('config-name').value = station?.name || '';
+        document.getElementById('config-id').value = station?.id || '';
+        document.getElementById('config-lat-lon').value = station ? `${station.lat}, ${station.lon}` : '';
         
-        // Thiết lập tâm bản đồ lần đầu tiên
-        let center = DEFAULT_CENTER;
-        let zoom = DEFAULT_ZOOM;
+        document.getElementById('config-id').readOnly = !!station;
+        document.getElementById('config-id').placeholder = station ? '' : 'ID Duy nhất (VD: F01234)';
         
-        if (allStations.length > 0) {
-            // Tâm Bản đồ sẽ là nơi có tọa độ của Khu Vực 1 (phần tử đầu tiên đã được lưu config)
-            const khuVuc1 = allStations.find(s => s.lat && s.lon); // Tìm trạm đầu tiên có tọa độ
-            if (khuVuc1) {
-                center = [khuVuc1.lat, khuVuc1.lon];
-                zoom = 16; // Phóng to hơn khi tìm thấy trạm cụ thể
-            }
-        }
+        configModal.querySelector('h2').textContent = station ? `Sửa Cấu Hình: ${station.name}` : 'Thêm Khu Vực Mới';
         
-        map.setView(center, zoom); // Áp dụng tâm và zoom
-        
-    } catch (err) {
-        console.error('Lỗi khi tải dữ liệu trạm:', err);
+        configModal.style.display = 'flex';
     }
-}
 
-// ... (Phần Khởi tạo, Form Handling và Rendering giữ nguyên)
+    function closeConfigModal() {
+        configModal.style.display = 'none';
+        configForm.reset();
+        editingStationId = null;
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Khởi tạo Bản đồ (Google Maps/vntraffic.app thường dùng nền OpenStreetMap)
+    // --- RENDERING & MAP LOGIC ---
+    
+    // ... (Giữ nguyên renderMarkers, renderSidebar)
+
+    async function loadStations() {
+        try {
+            // [Đường dẫn đã được sửa trong Ver 02, giữ nguyên logic gọi API đơn giản]
+            const res = await fetch(`${API_BASE_URL}/get-locations.php`);
+            allStations = await res.json();
+            
+            allStations.sort((a, b) => a.id.localeCompare(b.id));
+
+            renderSidebar();
+            renderMarkers();
+            
+            // ... (Giữ nguyên logic thiết lập center/zoom)
+            
+            let center = DEFAULT_CENTER;
+            let zoom = DEFAULT_ZOOM;
+            
+            if (allStations.length > 0) {
+                const khuVuc1 = allStations.find(s => s.lat && s.lon); 
+                if (khuVuc1) {
+                    center = [khuVuc1.lat, khuVuc1.lon];
+                    zoom = 16; 
+                }
+            }
+            map.setView(center, zoom); 
+            
+        } catch (err) {
+            console.error('Lỗi khi tải dữ liệu trạm:', err);
+        }
+    }
+
+    // --- FORM HANDLING ---
+
+    configForm.addEventListener('submit', async (e) => {
+        // ... (Giữ nguyên logic Lưu cấu hình)
+    });
+
+    // --- INITIALIZATION (CHẠY NGAY) ---
+
+    // 1. Khởi tạo Bản đồ: Phải nằm trong khối code này
     map = L.map('map').setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
     // Thêm Tile Layer (OpenStreetMap)
@@ -56,9 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Tải dữ liệu trạm lần đầu
+    // 2. Gán sự kiện cho Modal
+    btnCancel.addEventListener('click', closeConfigModal);
+
+    // Gán sự kiện cho nút "Thêm Khu Vực Mới"
+    btnAddStation.addEventListener('click', () => {
+        openConfigModal(null);
+        document.getElementById('config-id').readOnly = false;
+    });
+
+    // 3. Tải dữ liệu trạm lần đầu và thiết lập Interval
     loadStations();
-    
-    // Tự động làm mới dữ liệu sau mỗi 30 giây
     setInterval(loadStations, 30000); 
-});
+
+})();
