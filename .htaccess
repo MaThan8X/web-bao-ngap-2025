@@ -1,10 +1,10 @@
-# .htaccess (Ver 03 - Fix PHP Handler Bằng ForceType)
+# .htaccess (Ver 04 - Fix PHP Handler Tuyệt đối và Index)
 # - Đảm bảo index.html là trang mặc định.
-# - Ép buộc server thực thi file .php bằng cách sử dụng ForceType.
+# - Ép buộc server thực thi PHP bằng handler cụ thể cho gói hosting này.
 
 DirectoryIndex index.html
 
-# Cấu hình này buộc Apache/LiteSpeed xử lý file .php như là mã PHP
-<Files "*.php">
-    ForceType application/x-httpd-php
-</Files>
+# Cấu hình này dựa trên PHP Path: /home/sysphp
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
