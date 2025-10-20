@@ -1,6 +1,6 @@
 # ftp-deploy.yml (Ver 05 - Dùng lại Lệnh Lftp Đã Chạy Tốt)
-# - Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
-# - Dùng lại Hostname đã hoạt động.
+# - Sửa lỗi: Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
+# - Sử dụng Hostname và Remote Path đã xác minh.
 
 name: FTP Deploy
 on:
