@@ -1,6 +1,6 @@
-# ftp-deploy.yml (Ver 04 - Dùng lại Lệnh Lftp đã Chạy Tốt)
-# - Sửa lỗi: Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
-# - Điều chỉnh: Dùng lại cấu hình lftp đã hoạt động.
+# ftp-deploy.yml (Ver 05 - Dùng lại Lệnh Lftp Đã Chạy Tốt)
+# - Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
+# - Dùng lại Hostname đã hoạt động.
 
 name: FTP Deploy
 on:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy via lftp mirror
         env:
-          # Dùng lại HOSTNAME của web cũ vì đã hoạt động với lftp
+          # Dùng HOSTNAME đã được xác minh hoạt động với lftp
           FTP_HOST: ${{ secrets.FTP_HOST }} 
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
@@ -29,7 +29,7 @@ jobs:
         run: |
           lftp -u "$FTP_USER,$FTP_PASS" $FTP_HOST -e "
             set ftp:ssl-allow no
-            # [SỬA ĐỔI TẠI ĐÂY] mirror -R --verbose từ thư mục hiện tại (./)
+            # [SỬA ĐỔI] mirror -R --verbose từ thư mục hiện tại (./)
             # sang thư mục đích (bao-ngap-2025/)
             mirror -R --verbose . $FTP_REMOTE_PATH
             quit
