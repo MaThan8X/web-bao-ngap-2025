@@ -1,5 +1,6 @@
-# .htaccess (Ver 01 - Fix lỗi chuyển hướng).
-# Ép buộc server hiển thị index.html khi truy cập vào thư mục
-# Đảm bảo index.html là trang mặc định cho thư mục này.
+# .htaccess (Ver 02 - Fix PHP Handler và Index)
+# - Đảm bảo index.html là trang mặc định.
+# - Ép buộc server thực thi file .php như một module.
+
+DirectoryIndex index.html
 AddHandler application/x-httpd-php .php
-Options +ExecCGI
