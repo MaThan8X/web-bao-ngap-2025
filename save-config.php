@@ -1,7 +1,7 @@
 <?php
-// save-config.php (Ver 01 - Dự án Web Báo Ngập 2025)
-// Nhiệm vụ: Nhận ID, Name (Tên địa điểm), Lat, Lon từ giao diện web
-// và cập nhật/lưu trữ chúng vào locations.json.
+// save-config.php (Ver 02 - Fix Cú pháp/BOM & Lỗi Ghi file)
+// - Bỏ thẻ đóng ?> ở cuối file.
+// - Bổ sung thông tin lỗi khi file_put_contents thất bại.
 
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -42,17 +42,16 @@ if (file_exists($dataFile)) {
 // --- 3. Tìm và cập nhật cấu hình trạm ---
 $stationIndex = -1;
 foreach ($locations as $index => &$station) {
-    if ($station['id'] === $id) {
+    if (($station['id'] ?? '') === $id) {
         $stationIndex = $index;
         // Cập nhật cấu hình
         $station['name'] = $name;
         $station['lat']  = $lat;
         $station['lon']  = $lon;
-        // Giữ nguyên các thông tin đo lường cũ (mucnuoc, vol, last_update)
         break;
     }
 }
-unset($station); // Giải phóng tham chiếu
+unset($station); 
 
 // --- 4. Thêm trạm mới nếu chưa tồn tại (chỉ thêm thông tin cấu hình) ---
 if ($stationIndex === -1) {
@@ -69,10 +68,18 @@ if ($stationIndex === -1) {
 }
 
 // --- 5. Ghi dữ liệu đã cập nhật vào file ---
-if (file_put_contents($dataFile, json_encode($locations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK))) {
+// Ghi lại file JSON với các cờ (flags) để đảm bảo tính an toàn
+$json_flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE;
+// Sử dụng JSON_NUMERIC_CHECK chỉ khi nó được hỗ trợ
+if (defined('JSON_NUMERIC_CHECK')) {
+    $json_flags |= JSON_NUMERIC_CHECK;
+}
+
+if (file_put_contents($dataFile, json_encode($locations, $json_flags))) {
     echo json_encode(['status' => 'success', 'message' => 'Config saved for id: ' . $id]);
 } else {
     http_response_code(500); // Internal Server Error
-    echo json_encode(['status' => 'error', 'message' => 'Failed to write to data file']);
+    $error = error_get_last()['message'] ?? 'Unknown write error. Check file permissions (chmod 777).';
+    echo json_encode(['status' => 'error', 'message' => 'Failed to write to data file: ' . $error]);
 }
-?>
+// Bỏ thẻ đóng ?> để tránh lỗi BOM/khoảng trắng thừa
