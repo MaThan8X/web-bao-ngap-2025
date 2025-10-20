@@ -1,9 +1,8 @@
-# ftp-deploy.yml (Ver 02 - Dự án Web Báo Ngập 2025)
-# - Thay thế logic lftp thủ công bằng cách sử dụng đúng action SamKirkland/FTP-Deploy-Action.
-# - Đảm bảo toàn bộ nội dung repository (gồm send-data.php, index.html, v.v...) được triển khai.
-# pass chuẩn 01
-name: Deploy to FTP Host
-# Kích hoạt khi có code được đẩy lên nhánh 'main'
+# ftp-deploy.yml (Ver 04 - Dùng lại Lệnh Lftp đã Chạy Tốt)
+# - Sửa lỗi: Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
+# - Điều chỉnh: Dùng lại cấu hình lftp đã hoạt động.
+
+name: FTP Deploy
 on:
   push:
     branches:
@@ -11,23 +10,27 @@ on:
 
 jobs:
   ftp-deploy:
-    name: FTP Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        # Lấy mã nguồn từ repo
         uses: actions/checkout@v4
 
-      - name: Deploy via SamKirkland FTP Action
-        # Sử dụng action đã chọn, action này sẽ tự động deploy toàn bộ file
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          # Đường dẫn đến thư mục dự án mới trên hosting (bao-ngap-2025/)
-          remote-path: ${{ secrets.FTP_REMOTE_PATH }}
-          # Mặc định là . (thư mục gốc của repo)
-          # local-path: '.' 
-          # Mặc định là false. Đặt true để chỉ upload file đã thay đổi (nên dùng)
-          state-name: .ftp-deploy-state.json
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Deploy via lftp mirror
+        env:
+          # Dùng lại HOSTNAME của web cũ vì đã hoạt động với lftp
+          FTP_HOST: ${{ secrets.FTP_HOST }} 
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+          # Path là thư mục đích mới (bao-ngap-2025/)
+          FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }} 
+        run: |
+          lftp -u "$FTP_USER,$FTP_PASS" $FTP_HOST -e "
+            set ftp:ssl-allow no
+            # [SỬA ĐỔI TẠI ĐÂY] mirror -R --verbose từ thư mục hiện tại (./)
+            # sang thư mục đích (bao-ngap-2025/)
+            mirror -R --verbose . $FTP_REMOTE_PATH
+            quit
+          "
