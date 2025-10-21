@@ -3,56 +3,53 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hệ Thống Đèn Giao Thông Kết Hợp Báo Ngập Thành Phố</title>
-
+    <title>Hệ Thống Cảnh Báo Ngập</title>
+    <!-- Thư viện bản đồ Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    
-    <link rel="stylesheet" href="styles.css"/>
-
-    <style>
-        /* CSS Bố cục đã sửa ở các bước trước */
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f0f0f0; overflow: hidden; }
-        header { background: #007bff; color: white; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 1000; }
-        h1 { margin: 0; font-size: 1.5em; }
-        #main-container { display: flex; height: calc(100vh - 60px); }
-        #sidebar { width: 280px; background: #f8f9fa; border-right: 1px solid #ddd; overflow-y: auto; padding: 10px 0; flex-shrink: 0; }
-        #map { flex-grow: 1; z-index: 1; }
-        /* Thêm lại các style cho Modal/Button bị thiếu trong HTML cũ */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 350px; }
-        .add-station-btn { width: 90%; margin: 10px 5%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; }
-    </style>
+    <!-- File CSS tùy chỉnh (sẽ được thêm bởi script dưới đây) -->
+    <link id="main-stylesheet" rel="stylesheet" href="">
 </head>
 <body>
-    <div id="header">
-        <h1>Hệ Thống Đèn Giao Thông Kết Hợp Báo Ngập Thành Phố</h1>
-    </div>
+
+    <!-- Tiêu đề trang -->
+    <header id="header">
+        <h1>Hệ Thống Cảnh Báo Ngập Thành Phố</h1>
+    </header>
     
+    <!-- Container chính chứa Sidebar và Bản đồ -->
     <div id="main-container">
-        <div id="sidebar">
-            <button id="add-station-btn" class="add-station-btn">Thêm Khu Vực Mới</button>
-            <ul id="station-list">
-                </ul>
-        </div>
         
-        <div id="map"></div>
+        <!-- Thanh công cụ bên trái -->
+        <aside id="sidebar">
+            <div id="sidebar-header">
+                <h2>Danh sách Trạm</h2>
+            </div>
+            <ul id="station-list">
+                <!-- Danh sách các trạm sẽ được JS chèn vào đây -->
+            </ul>
+            <button id="add-station-btn" class="sidebar-footer-btn">Thêm Khu Vực Mới</button>
+        </aside>
+        
+        <!-- Khu vực hiển thị bản đồ -->
+        <main id="map"></main>
     </div>
 
+    <!-- Modal (cửa sổ nổi) để thêm/sửa cấu hình trạm -->
     <div id="config-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Cấu Hình Địa Điểm</h2>
+            <h2 id="modal-title">Cấu Hình Địa Điểm</h2>
             <form id="config-form">
                 <div class="form-group">
                     <label for="config-name">Tên Địa điểm</label>
-                    <input type="text" id="config-name" required>
+                    <input type="text" id="config-name" required placeholder="Ví dụ: Ngã tư Đinh Tiên Hoàng">
                 </div>
                 <div class="form-group">
                     <label for="config-id">ID Thiết bị</label>
-                    <input type="text" id="config-id" required>
+                    <input type="text" id="config-id" required placeholder="Ví dụ: F01234">
                 </div>
                 <div class="form-group">
-                    <label for="config-lat-lon">Tọa độ (lat, lon)</label>
-                    <input type="text" id="config-lat-lon" placeholder="VD: 21.0740193, 105.8565773" required>
+                    <label for="config-lat-lon">Tọa độ (vĩ độ, kinh độ)</label>
+                    <input type="text" id="config-lat-lon" required placeholder="Ví dụ: 21.028511, 105.854164">
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancel">Hủy</button>
@@ -62,10 +59,19 @@
         </div>
     </div>
 
-
+    <!-- Script thư viện bản đồ Leaflet -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script src="map-handler.js" defer></script>
-
+    
+    <!-- === PHẦN SỬA LỖI QUAN TRỌNG NHẤT === -->
+    <!-- Script này sẽ tải file CSS và JS với một mã ngẫu nhiên để phá vỡ cache -->
+    <script>
+        const cacheBuster = `?v=${Date.now()}`;
+        document.getElementById('main-stylesheet').href = 'styles.css' + cacheBuster;
+        
+        const script = document.createElement('script');
+        script.src = 'map-handler.js' + cacheBuster;
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>
+
