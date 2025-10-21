@@ -1,9 +1,4 @@
-/* styles.css (Ver 01 - Layout & Map Styles)
-   - Thiết lập layout Sidebar và Map Fullscreen.
-   - Thiết lập style cho các Marker tùy chỉnh (hình tròn).
-   - Thiết lập style cho Modal/Form cấu hình trạm.
-*/
-/* styles.css (Ver 02 - Final Layout & Map Styles) */
+/* styles.css (Ver 03 - Thống nhất Sidebar & Hiệu ứng Marker) */
 
 :root {
     --header-height: 60px;
@@ -13,6 +8,7 @@
     --color-danger: #dc3545;    /* Đỏ */
     --color-nodata: #6c757d;    /* Xám (Chưa có dữ liệu) */
     --border-color: #ddd;
+    --item-bg: #fff;            /* Nền trắng cho các mục */
 }
 
 body {
@@ -46,33 +42,57 @@ body {
     height: calc(100vh - var(--header-height));
 }
 
-/* 3. SIDEBAR (Fix padding và spacing) */
+/* 3. SIDEBAR */
 #sidebar {
     width: var(--sidebar-width);
     background: #f8f9fa;
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
-    padding: 10px; /* Thêm padding xung quanh */
+    padding: 10px; 
     flex-shrink: 0;
 }
 
 #station-list {
     list-style: none;
     padding: 0;
-    margin: 10px 0 0 0; /* Khoảng cách từ nút Add */
+    margin: 10px 0 0 0; 
 }
 
-.station-item {
+/* STYLE CHUNG CHO CẢ NÚT 'THÊM KHU VỰC MỚI' VÀ CÁC MỤC TRẠM */
+.station-item, 
+#add-station-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
     padding: 10px;
-    margin-bottom: 5px; /* Khoảng cách giữa các mục */
+    margin-bottom: 5px; 
     border: 1px solid #ccc;
-    border-radius: 4px; /* Bo tròn góc */
+    border-radius: 4px; 
     cursor: pointer;
     transition: background 0.1s;
     font-size: 1.05em;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    background: var(--item-bg);
+    color: #333; /* Màu chữ */
 }
 
+/* Style riêng cho nút Add */
+#add-station-btn {
+    margin-top: 0; /* Đẩy lên sát mép trên */
+    margin-bottom: 15px; 
+    background: var(--color-safe);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    border-color: var(--color-safe);
+}
+
+#add-station-btn:hover {
+    background: #157347;
+    color: white;
+}
+
+/* Nút Trạm */
 .station-item:hover {
     background: #e9ecef;
 }
@@ -80,7 +100,7 @@ body {
 /* Hiển thị Trạng thái bằng border left */
 .station-item[data-status="danger"] {
     border-left: 5px solid var(--color-danger);
-    background: #fff3f4; /* Nền nhạt */
+    background: #fff3f4; 
 }
 .station-item[data-status="warn"] {
     border-left: 5px solid var(--color-warn);
@@ -102,21 +122,6 @@ body {
     color: #6c757d;
 }
 
-.add-station-btn {
-    width: 100%; /* Đảm bảo nút chiếm 100% padding */
-    padding: 10px;
-    background: var(--color-safe);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background 0.2s;
-}
-
-.add-station-btn:hover {
-    background: #157347;
-}
 
 /* 4. MAP AREA */
 #map {
@@ -124,7 +129,15 @@ body {
     z-index: 1; 
 }
 
-/* 5. CUSTOM MARKER */
+/* 5. CUSTOM MARKER (Hiệu ứng tỏa ra) */
+
+/* @keyframes pulse */
+@keyframes pulse {
+    0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+    100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+}
+
 .water-marker {
     width: 25px;
     height: 25px;
@@ -132,14 +145,17 @@ body {
     border: 3px solid white;
     box-shadow: 0 0 5px rgba(0,0,0,0.5);
     cursor: pointer;
+    /* ÁP DỤNG HIỆU ỨNG PULSE */
+    animation: pulse 2s infinite; 
 }
 
-.water-marker-nodata { background-color: var(--color-nodata); }
-.water-marker-safe { background-color: var(--color-safe); }
-.water-marker-warn { background-color: var(--color-warn); }
-.water-marker-danger { background-color: var(--color-danger); }
+.water-marker-nodata { background-color: var(--color-nodata); border-color: #aaa; }
+.water-marker-safe { background-color: var(--color-safe); border-color: var(--color-safe); }
+.water-marker-warn { background-color: var(--color-warn); border-color: var(--color-warn); }
+.water-marker-danger { background-color: var(--color-danger); border-color: var(--color-danger); }
 
-/* 6. MODAL */
+
+/* 6. MODAL (Giữ nguyên) */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -160,4 +176,4 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     width: 350px;
 }
-/* ... (Giữ nguyên các style Modal/Form còn lại) ... */
+/* ... (Modal actions giữ nguyên) ... */
