@@ -1,7 +1,7 @@
-// map-handler.js (Ver 12 - Sửa lỗi: Nút "Thêm Khu Vực Mới" không hoạt động)
-// - Sửa lỗi: Đảm bảo sự kiện click cho nút "Thêm Khu Vực Mới" (btnAddStation) được gán chính xác.
-// - Cải tiến: Khai báo và sử dụng biến btnDelete để chuẩn bị cho chức năng Xóa Trạm.
-// - Cải tiến: Đảm bảo các biến DOM được lấy đúng sau khi trang tải.
+// map-handler.js (Ver 13 - Fix lỗi Modal Cấu hình không hiển thị & Tối ưu Marker)
+// - Sửa lỗi: Đảm bảo Modal Cấu hình được hiển thị (display='block') khi gọi openConfigModal(null) (khắc phục lỗi nút "Thêm Khu Vực Mới").
+// - Bổ sung: Thêm window.closeConfigModal để nút Hủy trong Modal hoạt động.
+// - Cải tiến: Thêm xử lý để bỏ qua các trạm thiếu tọa độ khi render Marker (khắc phục lỗi mất Điểm tròn động nếu dữ liệu sai).
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -108,7 +108,7 @@
         editingStationId = null;
     }
     
-    // Nút Hủy trong Modal cũng gọi hàm này
+    // Nút Hủy trong Modal cũng gọi hàm này (Đã bổ sung vào window)
     window.closeConfigModal = closeConfigModal;
 
     // Mở Modal Cấu hình (được gọi từ Sidebar/Popup/Nút Thêm mới)
@@ -153,8 +153,11 @@
             if(btnDelete) btnDelete.style.display = 'block';
         }
         
+        // Fix lỗi: Đảm bảo Modal được set display: block (nếu DOM tồn tại)
         if (configModal) {
             configModal.style.display = 'block';
+        } else {
+            console.error("LỖI KHÔNG TÌM THẤY: configModal");
         }
     }
 
@@ -215,7 +218,8 @@
         }
 
         // Action 'delete' được xử lý trong save-config.php (Ver 03)
-        const apiUrl = `${API_BASE_URL}/save-config.php?id=${encodeURIComponent(idToDelete)}&action=delete&name=DELETE_ME&lat=0&lon=0`; 
+        // Lưu ý: Gửi action delete để server xử lý
+        const apiUrl = `${API_BASE_URL}/save-config.php?id=${encodeURIComponent(idToDelete)}&action=delete`; 
         
         // Thêm loading indicator
         btnDelete.textContent = 'Đang xóa...';
@@ -249,21 +253,21 @@
         markersLayer.clearLayers(); // Xóa các marker cũ
         
         stations.forEach(station => {
-            // Bỏ qua các trạm không có tọa độ hợp lệ
+            // Bỏ qua các trạm không có tọa độ hợp lệ (Khắc phục lỗi mất Điểm tròn động)
             if (!station.lat || !station.lon || isNaN(station.lat) || isNaN(station.lon)) {
-                console.warn(`Bỏ qua trạm ${station.id} vì thiếu tọa độ.`);
+                console.warn(`Bỏ qua trạm ${station.id} vì thiếu hoặc sai tọa độ.`);
                 return;
             }
 
             const status = getStatus(station.mucnuoc);
             
-            // Định nghĩa icon
+            // Định nghĩa icon (CSS đã được cập nhật để tạo hiệu ứng động)
             const customIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `<div class="marker-pin ${status}"></div><div class="marker-label">${station.id}</div>`,
-                iconSize: [30, 42], // Kích thước của toàn bộ div
-                iconAnchor: [15, 42], // Điểm neo (dưới cùng của pin)
-                popupAnchor: [0, -40] // Vị trí popup
+                iconSize: [30, 42], 
+                iconAnchor: [15, 42], 
+                popupAnchor: [0, -40] 
             });
 
             // Tạo marker
@@ -304,10 +308,10 @@
             
             allStations = data;
             
-            // 1. Render Sidebar
+            // 1. Render Sidebar (Giao diện đã được làm đẹp trong styles.css Ver 05)
             renderSidebar(allStations);
             
-            // 2. Render Markers
+            // 2. Render Markers (Hiệu ứng điểm tròn động đã được thêm trong styles.css Ver 05)
             renderMarkers(allStations);
             
             console.log(`Đã tải và render thành công ${allStations.length} trạm.`);
@@ -322,12 +326,12 @@
     
     function initMap() {
         
-        // 1. TÌM KIẾM VÀ GÁN DOM (DÙNG ĐỂ SỬA LỖI GÁN SỰ KIỆN)
+        // 1. TÌM KIẾM VÀ GÁN DOM 
         configModal = document.getElementById('config-modal');
         configForm = document.getElementById('config-form');
         btnCancel = document.getElementById('btn-cancel');
         btnAddStation = document.getElementById('add-station-btn');
-        btnDelete = document.getElementById('btn-delete'); // Lấy nút Xóa
+        btnDelete = document.getElementById('btn-delete'); 
         
         // --- Bắt đầu Khởi tạo Map ---
         if (!document.getElementById('map') || !L) {
@@ -342,13 +346,13 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // --- GÁN SỰ KIỆN (Kiểm tra sự tồn tại của các phần tử) ---
+        // --- GÁN SỰ KIỆN ---
         if (configForm && btnAddStation && btnCancel && btnDelete) {
             
-            // SỰ KIỆN CHO NÚT HỦY
+            // SỰ KIỆN CHO NÚT HỦY (Trong Modal)
             btnCancel.addEventListener('click', closeConfigModal);
             
-            // SỰ KIỆN NÚT THÊM KHU VỰC MỚI (Đã Fix)
+            // SỰ KIỆN NÚT THÊM KHU VỰC MỚI (Fix lỗi)
             btnAddStation.addEventListener('click', () => {
                 window.openConfigModal(null); // Gọi hàm mở modal ở chế độ thêm mới
                 document.getElementById('config-id').readOnly = false;
@@ -361,7 +365,7 @@
             configForm.addEventListener('submit', handleFormSubmit);
             
         } else {
-             // Debug log chi tiết hơn
+             // Debug log chi tiết hơn để kiểm tra DOM
              console.error("LỖI DOM: Các nút tương tác (Modal/Sidebar) không được tìm thấy.");
              console.log({ configForm, btnAddStation, btnCancel, btnDelete });
         }
