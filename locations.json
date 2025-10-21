@@ -1,0 +1,47 @@
+[
+  {
+    "id": "T00001",
+    "name": "Đinh Tiên Hoàng - Lý Tự Trọng",
+    "lat": 20.26425,
+    "lon": 105.9751,
+    "mucnuoc": 5,
+    "vol": 3.7,
+    "last_update": "2025-10-21 12:00:00"
+  },
+  {
+    "id": "T00002",
+    "name": "Vân Giang - Cầu Vòm",
+    "lat": 20.2681,
+    "lon": 105.979,
+    "mucnuoc": 25,
+    "vol": 3.5,
+    "last_update": "2025-10-21 12:00:00"
+  },
+  {
+    "id": "T00003",
+    "name": "Quốc Lộ 1A - Ga Ninh Bình",
+    "lat": 20.2585,
+    "lon": 105.9815,
+    "mucnuoc": 45,
+    "vol": 3.2,
+    "last_update": "2025-10-21 12:00:00"
+  },
+  {
+    "id": "T00004",
+    "name": "Phan Đình Phùng - Phố Bắc",
+    "lat": 20.255,
+    "lon": 105.970,
+    "mucnuoc": 10,
+    "vol": 3.8,
+    "last_update": "2025-10-21 12:00:00"
+  },
+  {
+    "id": "T00005",
+    "name": "Trần Hưng Đạo - Chợ Rồng",
+    "lat": 20.272,
+    "lon": 105.974,
+    "mucnuoc": 0,
+    "vol": 3.9,
+    "last_update": "2025-10-21 12:00:00"
+  }
+]
