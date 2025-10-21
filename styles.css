@@ -1,7 +1,7 @@
-/* styles.css (Ver 05 - Cải thiện Sidebar và Sửa lỗi Marker) */
-/* - Khắc phục lỗi hiển thị Sidebar bị xấu (đã làm đẹp lại). */
-/* - Thêm CSS cho hiệu ứng Marker động (marker-pin). */
-/* - Giữ lại các kiểu dáng cho Modal Cấu hình. */
+/* styles.css (Ver 06 - Bổ sung hiển thị trạng thái chi tiết Sidebar) */
+/* - Khắc phục lỗi hiển thị Sidebar bị xấu (đã làm đẹp lại ở V05). */
+/* - Thêm CSS cho hiệu ứng Marker động (đã có ở V05). */
+/* - Bổ sung style cho status-text trong Sidebar (để hiển thị mức nước/vol đẹp hơn). */
 
 :root {
     --header-height: 60px;
@@ -118,10 +118,25 @@ body {
 }
 
 .station-id {
-    font-size: 0.85em;
+    font-size: 0.8em;
     color: #6c757d;
     margin-top: 2px;
 }
+
+/* Bổ sung style cho text trạng thái */
+.status-text {
+    font-weight: bold;
+    font-size: 0.9em !important;
+    margin-top: 4px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    width: fit-content;
+}
+.status-text.safe { background-color: var(--color-safe); color: white; }
+.status-text.warn { background-color: var(--color-warn); color: #333; }
+.status-text.danger { background-color: var(--color-danger); color: white; }
+.status-text.nodata { background-color: var(--color-nodata); color: white; }
+
 
 /* CHỈ BÁO TRẠNG THÁI (Màu sắc) */
 .status-indicator {
@@ -138,8 +153,8 @@ body {
 .station-item .status-indicator {
     position: absolute;
     left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 5px; /* Điều chỉnh vị trí của chấm tròn trạng thái */
+    transform: translateY(0%);
 }
 
 .status-indicator.safe { background-color: var(--color-safe); }
@@ -306,7 +321,7 @@ body {
     cursor: not-allowed;
 }
 
-/* 5. LEAFLET MARKER CUSTOM STYLES (Sửa lỗi mất Điểm tròn động) */
+/* 5. LEAFLET MARKER CUSTOM STYLES (Điểm tròn động) */
 
 /* Vùng chứa chung cho icon */
 .custom-marker {
