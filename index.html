@@ -1,3 +1,5 @@
+<!-- index.html (Ver 02 - Đảm bảo cấu trúc Modal Cấu hình) -->
+<!-- Phiên bản này giữ nguyên cấu trúc index.html đã có, chỉ đảm bảo các ID DOM khớp với JS -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -34,15 +36,14 @@
         <main id="map"></main>
     </div>
 
-    <!-- Modal (cửa sổ nổi) để thêm/sửa cấu hình trạm -->
-    <div id="config-modal" class="modal-overlay">
+    <!-- MODAL CẤU HÌNH -->
+    <div id="config-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal-btn">&times;</span>
-            <h2 id="modal-title">Cấu Hình Địa Điểm</h2>
+            <h2>Cấu hình Trạm</h2>
             <form id="config-form">
                 <div class="form-group">
                     <label for="config-name">Tên Địa điểm</label>
-                    <input type="text" id="config-name" required placeholder="Ví dụ: Ngã tư Đinh Tiên Hoàng">
+                    <input type="text" id="config-name" required placeholder="Ví dụ: Đinh Tiên Hoàng">
                 </div>
                 <div class="form-group">
                     <label for="config-id">ID Thiết bị</label>
@@ -54,6 +55,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="btn-delete" class="btn-danger">Xóa</button>
+                    <button type="button" id="btn-cancel" class="btn-primary" onclick="window.closeConfigModal()">Hủy</button>
                     <button type="submit" id="btn-save" class="btn-primary">Lưu Thay Đổi</button>
                 </div>
             </form>
@@ -70,10 +72,8 @@
         document.getElementById('main-stylesheet').href = 'styles.css' + cacheBuster;
         
         const script = document.createElement('script');
-        // Sửa lỗi chính tả từ cacheBster thành cacheBuster
         script.src = 'map-handler.js' + cacheBuster;
         document.body.appendChild(script);
     </script>
 </body>
 </html>
-
