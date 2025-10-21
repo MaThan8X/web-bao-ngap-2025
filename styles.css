@@ -1,14 +1,18 @@
-/* styles.css (Ver 04 - Tối ưu Form Modal và Nút Lưu) */
+/* styles.css (Ver 05 - Cải thiện Sidebar và Sửa lỗi Marker) */
+/* - Khắc phục lỗi hiển thị Sidebar bị xấu (đã làm đẹp lại). */
+/* - Thêm CSS cho hiệu ứng Marker động (marker-pin). */
+/* - Giữ lại các kiểu dáng cho Modal Cấu hình. */
 
 :root {
     --header-height: 60px;
     --sidebar-width: 280px;
-    --color-safe: #198754;      /* Xanh lá */
-    --color-warn: #ffc107;      /* Vàng */
-    --color-danger: #dc3545;    /* Đỏ */
+    --color-safe: #198754;      /* Xanh lá (An toàn) */
+    --color-warn: #ffc107;      /* Vàng (Nguy cơ) */
+    --color-danger: #dc3545;    /* Đỏ (Nguy hiểm) */
     --color-nodata: #6c757d;    /* Xám (Chưa có dữ liệu) */
     --border-color: #ddd;
     --item-bg: #fff;            /* Nền trắng cho các mục */
+    --hover-bg: #f5f5f5;        /* Nền xám nhạt khi hover */
 }
 
 body {
@@ -21,161 +25,199 @@ body {
 /* 1. HEADER */
 #header {
     height: var(--header-height);
-    background: #007bff; 
+    background: linear-gradient(90deg, #007bff, #0056b3); /* Gradient đẹp hơn */
     color: white;
     padding: 0 20px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3); /* Shadow rõ hơn */
     position: relative;
     z-index: 1000;
 }
 #header h1 {
     margin: 0;
-    font-size: 1.4em;
-    font-weight: 600;
+    font-size: 1.5em; /* Lớn hơn một chút */
+    letter-spacing: 0.5px;
 }
 
-/* 2. MAIN LAYOUT */
+/* 2. MAIN CONTAINER VÀ MAP */
 #main-container {
     display: flex;
     height: calc(100vh - var(--header-height));
 }
 
-/* 3. SIDEBAR */
+#map {
+    flex-grow: 1;
+    height: 100%;
+    z-index: 1; /* Đảm bảo bản đồ ở lớp dưới Sidebar */
+}
+
+/* 3. SIDEBAR - THANH CÔNG CỤ */
 #sidebar {
     width: var(--sidebar-width);
-    background: #f8f9fa;
-    border-right: 1px solid var(--border-color);
-    overflow-y: auto;
-    padding: 10px; 
+    background: #f8f9fa; /* Nền trắng xám nhẹ */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 10;
+    overflow-y: hidden; /* Chỉ cho phép cuộn nội dung list */
+}
+
+#sidebar-header {
+    padding: 15px 10px;
+    background: #e9ecef; /* Nền cho header sidebar */
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+}
+
+#sidebar-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #343a40;
 }
 
 #station-list {
     list-style: none;
     padding: 0;
-    margin: 10px 0 0 0; 
+    margin: 0;
+    overflow-y: auto; /* Cho phép cuộn danh sách trạm */
+    flex-grow: 1;
 }
 
-/* STYLE CHUNG CHO CẢ NÚT 'THÊM KHU VỰC MỚI' VÀ CÁC MỤC TRẠM */
-.station-item, 
-#add-station-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 10px;
-    margin-bottom: 5px; 
-    border: 1px solid #ccc;
-    border-radius: 4px; 
+/* MỤC TRẠM TRONG DANH SÁCH (STATION ITEM) */
+.station-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.1s;
-    font-size: 1.05em;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    background: var(--item-bg);
-    color: #333; /* Màu chữ */
+    transition: background-color 0.2s, box-shadow 0.2s;
+    background-color: var(--item-bg);
 }
 
-/* Style riêng cho nút Add */
-#add-station-btn {
-    margin-top: 0; 
-    margin-bottom: 15px; 
-    background: var(--color-safe);
-    color: white;
-    font-weight: bold;
-    text-align: center;
-    border-color: var(--color-safe);
-}
-
-#add-station-btn:hover {
-    background: #157347;
-    color: white;
-}
-
-/* Nút Trạm */
 .station-item:hover {
-    background: #e9ecef;
+    background-color: var(--hover-bg);
+    box-shadow: inset 3px 0 0 0 #007bff; /* Hiệu ứng gạch xanh bên trái */
 }
 
-/* Hiển thị Trạng thái bằng border left */
-.station-item[data-status="danger"] {
-    border-left: 5px solid var(--color-danger);
-    background: #fff3f4; 
-}
-.station-item[data-status="warn"] {
-    border-left: 5px solid var(--color-warn);
-    background: #fffceb;
-}
-.station-item[data-status="safe"] {
-    border-left: 5px solid var(--color-safe);
-    background: #f1f8f1;
+.station-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-.station-item-name {
+.station-name {
     font-weight: bold;
-    display: block;
     color: #333;
+    font-size: 1em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.station-item-id {
+.station-id {
     font-size: 0.85em;
     color: #6c757d;
+    margin-top: 2px;
 }
 
-
-/* 4. MAP AREA */
-#map {
-    flex-grow: 1;
-    z-index: 1; 
-}
-
-/* 5. CUSTOM MARKER (Hiệu ứng tỏa ra) */
-
-/* @keyframes pulse */
-@keyframes pulse {
-    0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4); }
-    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
-    100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
-}
-
-.water-marker {
-    width: 25px;
-    height: 25px;
+/* CHỈ BÁO TRẠNG THÁI (Màu sắc) */
+.status-indicator {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    cursor: pointer;
-    /* ÁP DỤNG HIỆU ỨNG PULSE */
-    animation: pulse 2s infinite; 
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+.station-item .station-info {
+    position: relative;
+    padding-left: 18px;
+}
+.station-item .status-indicator {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-.water-marker-nodata { background-color: var(--color-nodata); border-color: #aaa; }
-.water-marker-safe { background-color: var(--color-safe); border-color: var(--color-safe); }
-.water-marker-warn { background-color: var(--color-warn); border-color: var(--color-warn); }
-.water-marker-danger { background-color: var(--color-danger); border-color: var(--color-danger); }
+.status-indicator.safe { background-color: var(--color-safe); }
+.status-indicator.warn { background-color: var(--color-warn); }
+.status-indicator.danger { background-color: var(--color-danger); }
+.status-indicator.nodata { background-color: var(--color-nodata); }
+
+/* ACTIONS (Zoom và Edit) */
+.station-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.btn-zoom, .btn-edit {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    color: #6c757d;
+    padding: 5px;
+    line-height: 1;
+    transition: color 0.2s, background-color 0.2s;
+    border-radius: 4px;
+}
+
+.btn-zoom:hover {
+    color: #007bff; /* Màu xanh cho Zoom (Dò tìm) */
+    background-color: #e0f0ff;
+}
+.btn-edit:hover {
+    color: #6f42c1; /* Màu tím cho Edit (Setting) */
+    background-color: #f3e5ff;
+}
+
+/* FOOTER NÚT THÊM MỚI */
+.sidebar-footer-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--color-safe);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    border-top: 1px solid #cce5ff;
+    flex-shrink: 0; /* Đảm bảo nút này không bị co lại */
+}
+
+.sidebar-footer-btn:hover {
+    background: #157347; /* Màu xanh đậm hơn khi hover */
+}
 
 
-/* 6. MODAL (Tối ưu Form - Ver 04) */
-.modal-overlay {
+/* 4. MODAL CẤU HÌNH (CONFIG MODAL) - Giữ nguyên các chỉnh sửa đã có */
+#config-modal {
     position: fixed;
-    top: 0;
+    z-index: 10000; 
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none; 
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4); 
+    display: none; /* Mặc định ẩn */
 }
 
 .modal-content {
-    background: white;
-    padding: 30px; /* Tăng padding */
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Bóng đổ mạnh mẽ hơn */
-    width: 380px; /* Tăng chiều rộng */
+    background-color: #fff;
+    margin: 10% auto; /* Canh giữa theo chiều dọc */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%; 
+    max-width: 450px; /* Chiều rộng tối đa */
     border: 1px solid #ccc;
+    position: relative;
 }
 
 .modal-content h2 {
@@ -184,17 +226,17 @@ body {
     color: #007bff;
     border-bottom: 2px solid #007bff;
     padding-bottom: 10px;
-    margin-bottom: 25px; /* Tăng khoảng cách dưới */
+    margin-bottom: 25px; 
 }
 
 .form-group {
-    margin-bottom: 20px; /* Tăng khoảng cách giữa các dòng */
+    margin-bottom: 20px; 
 }
 
 .form-group label {
     display: block;
     font-weight: bold;
-    margin-bottom: 8px; /* Tăng khoảng cách dưới label */
+    margin-bottom: 8px; 
     color: #555;
     font-size: 1.1em;
 }
@@ -203,7 +245,7 @@ body {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
-    border: 1px solid #bbb; /* Border rõ ràng hơn */
+    border: 1px solid #bbb; 
     border-radius: 6px;
     font-size: 1em;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -217,37 +259,135 @@ body {
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end; /* Căn nút sang phải */
-    padding-top: 20px;
-    border-top: 1px solid #eee;
+    justify-content: flex-end;
+    gap: 10px;
     margin-top: 30px;
 }
 
-.modal-actions button {
+.btn-primary, .btn-danger, #btn-cancel {
     padding: 10px 20px;
-    margin-left: 10px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1.1em;
     font-weight: bold;
-    transition: background 0.2s;
+    transition: background-color 0.2s, opacity 0.2s;
 }
 
-#btn-save {
-    background: #007bff;
+.btn-primary {
+    background-color: #007bff;
     color: white;
 }
 
-#btn-save:hover {
-    background: #0056b3;
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
 }
 
 #btn-cancel {
-    background: #6c757d;
+    background-color: #6c757d;
     color: white;
 }
 
 #btn-cancel:hover {
-    background: #5a6268;
+    background-color: #5a6268;
+}
+
+/* Vô hiệu hóa nút khi đang tải */
+.btn-primary:disabled, .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 5. LEAFLET MARKER CUSTOM STYLES (Sửa lỗi mất Điểm tròn động) */
+
+/* Vùng chứa chung cho icon */
+.custom-marker {
+    position: relative;
+    width: 30px;
+    height: 42px;
+    user-select: none;
+    cursor: pointer;
+}
+
+/* Hình dạng chân kim (pin head) */
+.marker-pin {
+    width: 20px;
+    height: 20px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    position: absolute;
+    left: 5px;
+    top: 0;
+    border: 2px solid #fff; /* Viền trắng nổi bật */
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+/* Các màu trạng thái cho pin */
+.marker-pin.safe { 
+    background-color: var(--color-safe); 
+}
+.marker-pin.warn { 
+    background-color: var(--color-warn); 
+}
+.marker-pin.danger { 
+    background-color: var(--color-danger); 
+}
+.marker-pin.nodata { 
+    background-color: var(--color-nodata); 
+}
+
+/* Nhãn ID (chữ nhỏ) */
+.marker-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%); /* Canh giữa theo pin */
+    font-size: 0.8em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+    z-index: 1; 
+}
+
+
+/* --- HIỆU ỨNG ĐIỂM TRÒN ĐỘNG (PULSING) --- */
+
+/* Chỉ áp dụng hiệu ứng nhấp nháy cho trạng thái Nguy hiểm và Nguy cơ */
+.marker-pin.danger::after, 
+.marker-pin.warn::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background-color: inherit;
+    opacity: 0.7;
+    z-index: -1;
+    animation: pulse 1.5s infinite ease-out;
+}
+
+/* Tăng cường độ nhấp nháy cho Nguy hiểm */
+.marker-pin.danger::after {
+    animation-duration: 1s;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
 }
