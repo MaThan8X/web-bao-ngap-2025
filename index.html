@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hệ Thống Cảnh Báo Ngập</title>
+    <title>Hệ Thống Cảnh Báo Ngập Thành Phố</title>
     <!-- Thư viện bản đồ Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <!-- File CSS tùy chỉnh (sẽ được thêm bởi script dưới đây) -->
@@ -37,6 +37,7 @@
     <!-- Modal (cửa sổ nổi) để thêm/sửa cấu hình trạm -->
     <div id="config-modal" class="modal-overlay">
         <div class="modal-content">
+            <span class="close-modal-btn">&times;</span>
             <h2 id="modal-title">Cấu Hình Địa Điểm</h2>
             <form id="config-form">
                 <div class="form-group">
@@ -49,11 +50,11 @@
                 </div>
                 <div class="form-group">
                     <label for="config-lat-lon">Tọa độ (vĩ độ, kinh độ)</label>
-                    <input type="text" id="config-lat-lon" required placeholder="Ví dụ: 21.028511, 105.854164">
+                    <input type="text" id="config-lat-lon" required placeholder="Ví dụ: 20.2533, 105.9754">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" id="btn-cancel">Hủy</button>
-                    <button type="submit" id="btn-save">Lưu</button>
+                    <button type="button" id="btn-delete" class="btn-danger">Xóa</button>
+                    <button type="submit" id="btn-save" class="btn-primary">Lưu Thay Đổi</button>
                 </div>
             </form>
         </div>
@@ -69,6 +70,7 @@
         document.getElementById('main-stylesheet').href = 'styles.css' + cacheBuster;
         
         const script = document.createElement('script');
+        // Sửa lỗi chính tả từ cacheBster thành cacheBuster
         script.src = 'map-handler.js' + cacheBuster;
         document.body.appendChild(script);
     </script>
