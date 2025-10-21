@@ -1,7 +1,7 @@
-// map-handler.js (Ver 11 - Final Fix Lỗi DOM & Submit)
-// - Fix lỗi DOM: Khai báo và gán các phần tử DOM bên trong window.onload.
-// - Fix lỗi Sidebar: renderSidebar đã thêm data-status cho CSS.
-// - Fix lỗi Submit: Báo lỗi chi tiết từ server.
+// map-handler.js (Ver 12 - Sửa lỗi: Nút "Thêm Khu Vực Mới" không hoạt động)
+// - Sửa lỗi: Đảm bảo sự kiện click cho nút "Thêm Khu Vực Mới" (btnAddStation) được gán chính xác.
+// - Cải tiến: Khai báo và sử dụng biến btnDelete để chuẩn bị cho chức năng Xóa Trạm.
+// - Cải tiến: Đảm bảo các biến DOM được lấy đúng sau khi trang tải.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -13,7 +13,8 @@
     let allStations = []; 
     let editingStationId = null; 
 
-    let configModal, configForm, btnCancel, btnAddStation; 
+    // Khai báo các biến DOM ở phạm vi ngoài để tiện truy cập
+    let configModal, configForm, btnCancel, btnAddStation, btnDelete; 
 
     // --- UTILITY FUNCTIONS ---
     
@@ -31,196 +32,304 @@
         const statusText = {
             'nodata': 'Chưa có dữ liệu',
             'safe': 'An toàn',
-            'warn': 'Cảnh báo ngập',
-            'danger': 'Nguy hiểm ngập'
-        };
+            'warn': 'Nguy cơ',
+            'danger': 'Nguy hiểm'
+        }[status];
+
+        const trendText = getTrend(station); 
+
+        // Định dạng lại tên trạm nếu bị thiếu
+        const stationName = station.name && station.name.trim() !== '' ? station.name : `Trạm ${station.id}`;
         
+        // Dùng window.openConfigModal vì nó được khai báo global (trong IIFE này)
         return `
-            <div style="font-family: Arial, sans-serif; min-width: 150px;">
-                <p style="margin: 0 0 5px 0;"><strong>Địa điểm:</strong> ${station.name || 'Chưa đặt tên'}</p>
-                <p style="margin: 0 0 5px 0;"><strong>ID Thiết bị:</strong> ${station.id}</p>
-                <p style="margin: 0 0 5px 0;"><strong>Mực nước:</strong> ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : statusText[status]}</p>
-                <p style="margin: 0 0 5px 0;"><strong>Diễn biến:</strong> ${getTrend()}</p>
-                <p style="margin: 0; font-size: 0.8em; color: #666;">Cập nhật: ${station.last_update || 'N/A'}</p>
+            <div class="popup-content">
+                <h3 class="${status}">${stationName} (${station.id})</h3>
+                <p><strong>Mức nước:</strong> ${station.mucnuoc} cm</p>
+                <p><strong>Điện áp:</strong> ${station.vol} V</p>
+                <p><strong>Trạng thái:</strong> <span class="status-label ${status}">${statusText}</span></p>
+                <p><strong>Cập nhật cuối:</strong> ${station.last_update ? station.last_update : 'N/A'}</p>
+                <p><strong>Xu hướng:</strong> ${trendText}</p>
+                <button onclick="window.openConfigModal('${station.id}')" class="btn-config">Cấu hình</button>
             </div>
         `;
     }
 
-    function openConfigModal(station = null) {
-        editingStationId = station ? station.id : null;
-        document.getElementById('config-name').value = station?.name || '';
-        document.getElementById('config-id').value = station?.id || '';
-        document.getElementById('config-lat-lon').value = station ? `${station.lat}, ${station.lon}` : '';
-        
-        document.getElementById('config-id').readOnly = !!station;
-        document.getElementById('config-id').placeholder = station ? '' : 'ID Duy nhất (VD: F01234)';
-        
-        configModal.querySelector('h2').textContent = station ? `Sửa Cấu Hình: ${station.name}` : 'Thêm Khu Vực Mới';
-        
-        configModal.style.display = 'flex';
+    function createStationItem(station) {
+        const status = getStatus(station.mucnuoc);
+        const stationName = station.name && station.name.trim() !== '' ? station.name : `Trạm ${station.id} (Chưa cấu hình)`;
+
+        const li = document.createElement('li');
+        li.classList.add('station-item', status);
+        li.dataset.id = station.id;
+        li.dataset.status = status; 
+        li.innerHTML = `
+            <div class="station-info">
+                <span class="status-indicator ${status}"></span>
+                <span class="station-name">${stationName}</span>
+                <span class="station-id">ID: ${station.id}</span>
+            </div>
+            <div class="station-actions">
+                <button class="btn-zoom" title="Phóng to" onclick="window.zoomToStation('${station.id}')">🔍</button>
+                <button class="btn-edit" title="Chỉnh sửa" onclick="window.openConfigModal('${station.id}')">⚙️</button>
+            </div>
+        `;
+        return li;
     }
 
+    // --- HANDLERS VÀ MODAL ---
+
+    function renderSidebar(stations) {
+        const list = document.getElementById('station-list');
+        if (!list) return console.error("LỖI DOM: Không tìm thấy ul#station-list");
+        
+        // Sắp xếp theo ID (tăng dần)
+        stations.sort((a, b) => a.id.localeCompare(b.id));
+
+        list.innerHTML = '';
+        stations.forEach(station => {
+            list.appendChild(createStationItem(station));
+        });
+    }
+
+    // Dùng cho nút Zoom trên Sidebar
+    window.zoomToStation = function(id) {
+        const station = allStations.find(s => s.id === id);
+        if (station && map) {
+            map.setView([station.lat, station.lon], 16); // Zoom đến cấp độ 16
+        }
+    };
+    
+    // Đóng Modal Cấu hình
     function closeConfigModal() {
-        configModal.style.display = 'none';
-        configForm.reset();
+        if (configModal) {
+            configModal.style.display = 'none';
+        }
         editingStationId = null;
     }
-
-
-    // --- RENDERING & MAP LOGIC ---
     
-    function renderMarkers() {
-        markersLayer.clearLayers();
+    // Nút Hủy trong Modal cũng gọi hàm này
+    window.closeConfigModal = closeConfigModal;
+
+    // Mở Modal Cấu hình (được gọi từ Sidebar/Popup/Nút Thêm mới)
+    window.openConfigModal = function(id = null) {
+        editingStationId = id;
         
-        allStations.forEach(station => {
+        // Reset Form
+        configForm.reset();
+        document.getElementById('config-id').readOnly = false;
+        
+        // Lấy lại nút delete (cần đảm bảo nó được gán DOM ở initMap)
+        if(btnDelete) btnDelete.style.display = 'none'; 
+        
+        // Nút Thêm Khu Vực Mới (id = null)
+        if (id === null) {
+            configModal.querySelector('h2').textContent = 'Thêm Khu Vực Giám Sát Mới';
+        } else {
+            // Nút Chỉnh sửa (id != null)
+            const station = allStations.find(s => s.id === id);
+            if (!station) {
+                console.error(`Không tìm thấy trạm có ID: ${id}`);
+                return;
+            }
+            
+            configModal.querySelector('h2').textContent = `Cấu hình Trạm: ${id}`;
+            document.getElementById('config-id').value = station.id || '';
+            document.getElementById('config-name').value = station.name || '';
+            
+            // Xử lý tọa độ: Nếu lat/lon có sẵn, hiển thị nó
+            let latLonValue = '';
             if (station.lat && station.lon) {
-                const status = getStatus(station.mucnuoc);
-                
-                const iconHTML = `<div class="water-marker water-marker-${status}"></div>`;
-                const customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: iconHTML,
-                    iconSize: [25, 25], 
-                    iconAnchor: [15, 15] 
-                });
-                
-                const marker = L.marker([station.lat, station.lon], { icon: customIcon });
-                const popupContent = createPopupContent(station);
-                marker.bindPopup(popupContent, { closeButton: false, offset: L.point(0, -10) });
-                
-                marker.on('mouseover', function(e) {
-                    this.openPopup();
-                });
-                marker.on('mouseout', function(e) {
-                    setTimeout(() => {
-                        if (!e.target._popup._isOpen) return;
-                        e.target._popup.getElement().addEventListener('mouseout', () => {
-                            this.closePopup();
-                        });
-                    }, 50);
-                });
-                
-                markersLayer.addLayer(marker);
+                 latLonValue = `${station.lat}, ${station.lon}`;
+            } else if (station.lat) {
+                 latLonValue = `${station.lat}, `; // Chỉ có Lat
+            } else if (station.lon) {
+                 latLonValue = ` , ${station.lon}`; // Chỉ có Lon
             }
-        });
+            document.getElementById('config-lat-lon').value = latLonValue;
+            
+            // Khóa ID lại khi chỉnh sửa
+            document.getElementById('config-id').readOnly = true; 
+            if(btnDelete) btnDelete.style.display = 'block';
+        }
         
-        map.addLayer(markersLayer);
-    }
-
-    function renderSidebar() {
-        const list = document.getElementById('station-list');
-        list.innerHTML = '';
-        
-        allStations.forEach(station => {
-            const status = getStatus(station.mucnuoc);
-            const li = document.createElement('li');
-            li.className = `station-item`;
-            li.dataset.id = station.id;
-            li.dataset.status = status; // Thêm data-status cho CSS
-            
-            li.innerHTML = `
-                <span class="station-item-name">${station.name || 'Chưa đặt tên'}</span>
-                <span class="station-item-id">ID: ${station.id} | ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : 'No Data'}</span>
-            `;
-            
-            li.addEventListener('click', () => {
-                map.setView([station.lat, station.lon], 16);
-                openConfigModal(station);
-            });
-            
-            list.appendChild(li);
-        });
-    }
-
-    async function loadStations() {
-        try {
-            const res = await fetch(`${API_BASE_URL}/get-locations.php`);
-            
-            if (!res.ok) {
-                console.error(`Lỗi tải dữ liệu: HTTP ${res.status}`);
-                allStations = []; 
-            } else {
-                allStations = await res.json();
-            }
-            
-            allStations.sort((a, b) => a.id.localeCompare(b.id));
-
-            renderSidebar();
-            renderMarkers();
-            
-            let center = DEFAULT_CENTER;
-            let zoom = DEFAULT_ZOOM;
-            
-            if (allStations.length > 0) {
-                const khuVuc1 = allStations.find(s => s.lat && s.lon); 
-                if (khuVuc1) {
-                    center = [khuVuc1.lat, khuVuc1.lon];
-                    zoom = 16; 
-                }
-            }
-            map.setView(center, zoom); 
-            
-        } catch (err) {
-            console.error('Lỗi khi tải dữ liệu trạm:', err);
+        if (configModal) {
+            configModal.style.display = 'block';
         }
     }
 
-    // --- FORM HANDLING ---
-
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
+    // Xử lý Gửi Form Cấu hình
+    async function handleFormSubmit(event) {
+        event.preventDefault();
         
-        const id = document.getElementById('config-id').value.trim();
+        const id   = document.getElementById('config-id').value.trim();
         const name = document.getElementById('config-name').value.trim();
-        const latLon = document.getElementById('config-lat-lon').value.trim();
+        const latLon = document.getElementById('config-lat-lon').value.trim().split(',').map(s => s.trim());
         
-        const [latStr, lonStr] = latLon.split(',').map(s => s.trim());
-        const lat = parseFloat(latStr);
-        const lon = parseFloat(lonStr);
-        
-        if (!id || !name || isNaN(lat) || isNaN(lon)) {
-            alert('Vui lòng điền đầy đủ và đúng định dạng các trường.');
+        if (latLon.length !== 2) {
+            alert('Lỗi: Tọa độ phải nhập dưới dạng "vĩ độ, kinh độ".');
             return;
         }
 
-        try {
-            const params = new URLSearchParams({ id, name, lat, lon });
-            const url = `${API_BASE_URL}/save-config.php?${params.toString()}`;
-            
-            const res = await fetch(url);
-            
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Server trả về lỗi HTTP ${res.status}. Chi tiết: ${errorText.substring(0, 50)}...`);
-            }
-            
-            const json = await res.json();
-            
-            if (json.status === 'success') {
-                alert(`Lưu cấu hình thành công cho ID: ${id}`);
-                closeConfigModal();
-                loadStations(); 
-            } else {
-                alert('Lỗi khi lưu cấu hình: ' + (json.message || 'Không xác định'));
-            }
-            
-        } catch (err) {
-            console.error('Lỗi khi gửi cấu hình:', err);
-            alert('Lỗi kết nối hoặc xử lý dữ liệu: ' + err.message);
+        const lat = parseFloat(latLon[0]);
+        const lon = parseFloat(latLon[1]);
+
+        if (isNaN(lat) || isNaN(lon)) {
+             alert('Lỗi: Vĩ độ hoặc Kinh độ không hợp lệ.');
+             return;
         }
-    };
-
-
-    // --- KHỐI KHỞI TẠO CHÍNH (Chạy sau khi trang tải xong) ---
-    window.onload = function init() {
         
-        // 1. TÌM KIẾM VÀ GÁN DOM
+        const apiUrl = `${API_BASE_URL}/save-config.php?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&lat=${lat}&lon=${lon}`;
+        
+        // Thêm loading indicator
+        const btnSave = document.getElementById('btn-save');
+        btnSave.textContent = 'Đang lưu...';
+        btnSave.disabled = true;
+
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                alert('Cấu hình đã được lưu thành công.');
+                closeConfigModal();
+                fetchDataAndRender(); // Tải lại dữ liệu sau khi lưu
+            } else {
+                alert(`Lỗi khi lưu cấu hình: ${data.message || 'Không rõ'}`);
+            }
+        } catch (error) {
+            console.error('Lỗi Fetch API save-config:', error);
+            alert(`Lỗi kết nối hoặc server: ${error.message}`);
+        } finally {
+            btnSave.textContent = 'Lưu Thay Đổi';
+            btnSave.disabled = false;
+        }
+    }
+
+    // Xử lý Xóa Trạm
+    window.handleDeleteStation = async function() {
+        const idToDelete = editingStationId;
+
+        if (!idToDelete || !confirm(`Bạn có chắc chắn muốn XÓA trạm ${idToDelete} không? (Thao tác này chỉ xóa cấu hình trạm, dữ liệu gửi từ module SIM vẫn có thể tạo lại trạm.)`)) {
+            return;
+        }
+
+        // Action 'delete' được xử lý trong save-config.php (Ver 03)
+        const apiUrl = `${API_BASE_URL}/save-config.php?id=${encodeURIComponent(idToDelete)}&action=delete&name=DELETE_ME&lat=0&lon=0`; 
+        
+        // Thêm loading indicator
+        btnDelete.textContent = 'Đang xóa...';
+        btnDelete.disabled = true;
+
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                alert(`Trạm ${idToDelete} đã được xóa thành công.`);
+                closeConfigModal();
+                fetchDataAndRender(); // Tải lại dữ liệu sau khi xóa
+            } else {
+                alert(`Lỗi khi xóa trạm: ${data.message || 'Không rõ'}`);
+            }
+        } catch (error) {
+            console.error('Lỗi Fetch API delete-config:', error);
+            alert(`Lỗi kết nối hoặc server: ${error.message}`);
+        } finally {
+            btnDelete.textContent = 'Xóa';
+            btnDelete.disabled = false;
+        }
+    }
+
+
+    // --- MAP FUNCTIONS ---
+
+    // Xử lý Render Markers lên bản đồ
+    function renderMarkers(stations) {
+        markersLayer.clearLayers(); // Xóa các marker cũ
+        
+        stations.forEach(station => {
+            // Bỏ qua các trạm không có tọa độ hợp lệ
+            if (!station.lat || !station.lon || isNaN(station.lat) || isNaN(station.lon)) {
+                console.warn(`Bỏ qua trạm ${station.id} vì thiếu tọa độ.`);
+                return;
+            }
+
+            const status = getStatus(station.mucnuoc);
+            
+            // Định nghĩa icon
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-pin ${status}"></div><div class="marker-label">${station.id}</div>`,
+                iconSize: [30, 42], // Kích thước của toàn bộ div
+                iconAnchor: [15, 42], // Điểm neo (dưới cùng của pin)
+                popupAnchor: [0, -40] // Vị trí popup
+            });
+
+            // Tạo marker
+            const marker = L.marker([station.lat, station.lon], { icon: customIcon })
+                .addTo(markersLayer)
+                .bindPopup(createPopupContent(station));
+            
+            // Xử lý sự kiện click trên Sidebar để mở Popup của Marker
+            const listItem = document.querySelector(`.station-item[data-id="${station.id}"]`);
+            if (listItem) {
+                listItem.addEventListener('click', (e) => {
+                    // Ngăn chặn sự kiện click lan truyền từ các nút bên trong (Zoom/Edit)
+                    if (e.target.closest('.station-actions')) return; 
+                    marker.openPopup();
+                    map.setView([station.lat, station.lon], 16); // Đồng thời zoom vào
+                });
+            }
+        });
+        
+        markersLayer.addTo(map);
+    }
+
+    // --- FETCH DATA ---
+
+    async function fetchDataAndRender() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/get-locations.php`);
+            
+            if (!response.ok) {
+                 throw new Error(`Lỗi HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!Array.isArray(data)) {
+                throw new Error("Dữ liệu nhận được không phải là một mảng.");
+            }
+            
+            allStations = data;
+            
+            // 1. Render Sidebar
+            renderSidebar(allStations);
+            
+            // 2. Render Markers
+            renderMarkers(allStations);
+            
+            console.log(`Đã tải và render thành công ${allStations.length} trạm.`);
+            
+        } catch (error) {
+            console.error("LỖI KHI TẢI DỮ LIỆU:", error);
+            // Có thể hiển thị thông báo lỗi lên giao diện
+        }
+    }
+
+    // --- KHỞI TẠO ---
+    
+    function initMap() {
+        
+        // 1. TÌM KIẾM VÀ GÁN DOM (DÙNG ĐỂ SỬA LỖI GÁN SỰ KIỆN)
         configModal = document.getElementById('config-modal');
         configForm = document.getElementById('config-form');
         btnCancel = document.getElementById('btn-cancel');
         btnAddStation = document.getElementById('add-station-btn');
+        btnDelete = document.getElementById('btn-delete'); // Lấy nút Xóa
         
-        // 2. KHỞI TẠO MAP 
+        // --- Bắt đầu Khởi tạo Map ---
         if (!document.getElementById('map') || !L) {
             console.error("LỖI KHỞI TẠO MAP: Không tìm thấy div id='map' hoặc thư viện Leaflet.");
             return;
@@ -233,24 +342,36 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // 3. GÁN SỰ KIỆN (Kiểm tra sự tồn tại của các phần tử)
-        if (configForm && btnAddStation && btnCancel) { 
+        // --- GÁN SỰ KIỆN (Kiểm tra sự tồn tại của các phần tử) ---
+        if (configForm && btnAddStation && btnCancel && btnDelete) {
+            
+            // SỰ KIỆN CHO NÚT HỦY
             btnCancel.addEventListener('click', closeConfigModal);
             
+            // SỰ KIỆN NÚT THÊM KHU VỰC MỚI (Đã Fix)
             btnAddStation.addEventListener('click', () => {
-                openConfigModal(null);
+                window.openConfigModal(null); // Gọi hàm mở modal ở chế độ thêm mới
                 document.getElementById('config-id').readOnly = false;
             });
+            
+            // SỰ KIỆN CHO NÚT XÓA (Trong Modal)
+            btnDelete.addEventListener('click', window.handleDeleteStation);
 
+            // SỰ KIỆN GỬI FORM
             configForm.addEventListener('submit', handleFormSubmit);
+            
         } else {
-             console.error("LỖI DOM: Các nút tương tác (Modal/Button/Form) bị thiếu.");
+             // Debug log chi tiết hơn
+             console.error("LỖI DOM: Các nút tương tác (Modal/Sidebar) không được tìm thấy.");
+             console.log({ configForm, btnAddStation, btnCancel, btnDelete });
         }
-        
 
-        // 4. TẢI DỮ LIỆU LẦN ĐẦU
-        loadStations();
-        setInterval(loadStations, 30000); 
-    };
-
+        // --- LẤY DỮ LIỆU LẦN ĐẦU VÀ TỰ ĐỘNG CẬP NHẬT ---
+        fetchDataAndRender();
+        // Cập nhật sau mỗi 60 giây
+        setInterval(fetchDataAndRender, 60000); 
+    }
+    
+    // Khởi tạo Map và các sự kiện khi DOM đã load hoàn toàn
+    window.onload = initMap;
 })();
