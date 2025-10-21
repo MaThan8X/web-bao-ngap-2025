@@ -136,8 +136,8 @@
 
     async function loadStations() {
         try {
-            // [SỬA ĐỔI QUAN TRỌNG: Gọi API với phần mở rộng .php.html]
-            const res = await fetch(`${API_BASE_URL}/get-locations.php.html`);
+            // [SỬA ĐỔI QUAN TRỌNG: Gọi API với phần mở rộng .php.html-không sửa nữa]
+            const res = await fetch(`${API_BASE_URL}/get-locations.php`);
             allStations = await res.json();
             
             allStations.sort((a, b) => a.id.localeCompare(b.id));
@@ -182,8 +182,8 @@
 
         try {
             const params = new URLSearchParams({ id, name, lat, lon });
-            // [SỬA ĐỔI QUAN TRỌNG: Gọi API với phần mở rộng .php.html]
-            const url = `${API_BASE_URL}/save-config.php.html?${params.toString()}`;
+            // [SỬA ĐỔI QUAN TRỌNG: Gọi API với phần mở rộng .php.html- không chuyển nữa]
+            const url = `${API_BASE_URL}/save-config.php?${params.toString()}`;
             
             const res = await fetch(url);
             const json = await res.json();
