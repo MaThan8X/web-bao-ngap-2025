@@ -1,6 +1,7 @@
-// map-handler.js (Ver 15 - Tối ưu hiển thị Sidebar)
-// - Khắc phục lỗi: Đảm bảo Modal Cấu hình hiển thị (từ Ver 14).
-// - Cải tiến: Tối ưu hàm createStationItem để hiển thị trạng thái chi tiết hơn trong Sidebar (có Mức nước và Vol), giúp Sidebar đầy đủ thông tin hơn.
+// map-handler.js (Ver 16 - Sửa lỗi cứng Modal & Bỏ hiển thị Vol)
+// - Sửa lỗi: Đảm bảo Modal Cấu hình hiển thị (sử dụng document.getElementById lại bên trong openConfigModal nếu biến global bị null/undefined).
+// - Yêu cầu mới: Loại bỏ thông tin Điện áp (Vol) khỏi Popup và Sidebar.
+// - Giữ nguyên: Chức năng Zoom/Setting (Cấu hình) và Marker động.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -48,7 +49,7 @@
             <div class="popup-content">
                 <h3 class="${status}">${stationName} (${station.id})</h3>
                 <p><strong>Mức nước:</strong> ${station.mucnuoc === undefined || station.mucnuoc === null ? 'N/A' : station.mucnuoc + ' cm'}</p>
-                <p><strong>Điện áp:</strong> ${station.vol === undefined || station.vol === null ? 'N/A' : station.vol + ' V'}</p>
+                <!-- Đã loại bỏ hiển thị Vol theo yêu cầu -->
                 <p><strong>Trạng thái:</strong> <span class="status-label ${status}">${statusText}</span></p>
                 <p><strong>Cập nhật cuối:</strong> ${station.last_update ? station.last_update : 'N/A'}</p>
                 <p><strong>Xu hướng:</strong> ${trendText}</p>
@@ -57,14 +58,12 @@
         `;
     }
 
-    // TỐI ƯU HIỂN THỊ SIDEBAR
+    // TỐI ƯU HIỂN THỊ SIDEBAR (Bỏ Vol)
     function createStationItem(station) {
         const status = getStatus(station.mucnuoc);
         const statusText = getStatusText(status);
         const stationName = station.name && station.name.trim() !== '' ? station.name : `Trạm ${station.id} (Chưa cấu hình)`;
         const mucnuocText = station.mucnuoc === undefined || station.mucnuoc === null ? 'N/A' : `${station.mucnuoc} cm`;
-        const volText = station.vol === undefined || station.vol === null ? 'N/A' : `${station.vol} V`;
-
 
         const li = document.createElement('li');
         li.classList.add('station-item', status);
@@ -74,7 +73,8 @@
             <div class="station-info">
                 <span class="status-indicator ${status}"></span>
                 <span class="station-name">${stationName}</span>
-                <span class="station-id">Mức: ${mucnuocText} | Vol: ${volText}</span>
+                <!-- Bỏ hiển thị Vol, chỉ giữ lại Mức nước -->
+                <span class="station-id">Mức: ${mucnuocText}</span>
                 <span class="station-id status-text ${status}">${statusText}</span>
             </div>
             <div class="station-actions">
@@ -121,8 +121,13 @@
 
     // Mở Modal Cấu hình (được gọi từ Sidebar/Popup/Nút Thêm mới)
     window.openConfigModal = function(id = null) {
+        // Kiểm tra lại Modal một lần nữa, đảm bảo biến configModal không bị null
         if (!configModal) {
-            console.error("LỖI DOM: Modal Cấu hình (config-modal) chưa được tìm thấy.");
+            configModal = document.getElementById('config-modal');
+        }
+
+        if (!configModal) {
+            console.error("LỖI CỨNG DOM: Modal Cấu hình (config-modal) chưa được tìm thấy. Vui lòng kiểm tra index.html.");
             // Thay alert bằng thông báo nội bộ nếu cần
             return;
         }
@@ -130,8 +135,20 @@
         editingStationId = id;
         
         // Reset Form
-        configForm.reset();
-        document.getElementById('config-id').readOnly = false;
+        if(configForm) configForm.reset();
+        
+        // Cần đảm bảo các trường trong Modal tồn tại
+        const configIdInput = document.getElementById('config-id');
+        const configNameInput = document.getElementById('config-name');
+        const configLatLonInput = document.getElementById('config-lat-lon');
+
+        if (!configIdInput || !configNameInput || !configLatLonInput) {
+             console.error("LỖI CẤU TRÚC: Thiếu các trường ID, Tên hoặc Tọa độ trong Modal.");
+             return;
+        }
+
+
+        configIdInput.readOnly = false;
         
         if(btnDelete) btnDelete.style.display = 'none'; 
         
@@ -147,18 +164,18 @@
             }
             
             configModal.querySelector('h2').textContent = `Cấu hình Trạm: ${id}`;
-            document.getElementById('config-id').value = station.id || '';
-            document.getElementById('config-name').value = station.name || '';
+            configIdInput.value = station.id || '';
+            configNameInput.value = station.name || '';
             
-            // Xử lý tọa độ: Nếu lat/lon có sẵn, hiển thị nó
+            // Xử lý tọa độ
             let latLonValue = '';
             if (station.lat !== undefined && station.lon !== undefined && station.lat !== null && station.lon !== null) {
                  latLonValue = `${station.lat}, ${station.lon}`;
             }
-            document.getElementById('config-lat-lon').value = latLonValue;
+            configLatLonInput.value = latLonValue;
             
             // Khóa ID lại khi chỉnh sửa
-            document.getElementById('config-id').readOnly = true; 
+            configIdInput.readOnly = true; 
             if(btnDelete) btnDelete.style.display = 'block';
         }
         
@@ -326,6 +343,11 @@
         btnAddStation = document.getElementById('add-station-btn');
         btnDelete = document.getElementById('btn-delete'); 
         
+        // Thêm kiểm tra cứng nếu Modal không tìm thấy
+        if (!configModal) {
+            console.error("LỖI FATAL: Không tìm thấy #config-modal. Vui lòng kiểm tra index.html");
+        }
+
         // --- Bắt đầu Khởi tạo Map ---
         if (!document.getElementById('map') || !L) {
             console.error("LỖI KHỞI TẠO MAP: Không tìm thấy div id='map' hoặc thư viện Leaflet.");
@@ -345,7 +367,7 @@
             // SỰ KIỆN CHO NÚT HỦY (Trong Modal)
             btnCancel.addEventListener('click', closeConfigModal);
             
-            // SỰ KIỆN NÚT THÊM KHU VỰC MỚI
+            // SỰ KIỆN NÚT THÊM KHU VỰC MỚI (FIXED)
             btnAddStation.addEventListener('click', () => {
                 window.openConfigModal(null); 
                 document.getElementById('config-id').readOnly = false;
@@ -365,7 +387,7 @@
             };
             
         } else {
-             console.error("LỖI DOM: KHÔNG THỂ GÁN SỰ KIỆN. Vui lòng kiểm tra các ID: config-form, add-station-btn, btn-cancel, btn-delete, config-modal.");
+             console.error("LỖỖI DOM: KHÔNG THỂ GÁN SỰ KIỆN. Các nút tương tác không được tìm thấy.");
         }
 
         // --- LẤY DỮ LIỆU LẦN ĐẦU VÀ TỰ ĐỘNG CẬP NHẬT ---
