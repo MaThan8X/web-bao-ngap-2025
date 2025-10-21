@@ -1,7 +1,6 @@
-/* styles.css (Ver 06 - Bổ sung hiển thị trạng thái chi tiết Sidebar) */
-/* - Khắc phục lỗi hiển thị Sidebar bị xấu (đã làm đẹp lại ở V05). */
-/* - Thêm CSS cho hiệu ứng Marker động (đã có ở V05). */
-/* - Bổ sung style cho status-text trong Sidebar (để hiển thị mức nước/vol đẹp hơn). */
+/* styles.css (Ver 07 - Tối ưu hiển thị Sidebar sau khi bỏ Vol) */
+/* - Giữ nguyên các chỉnh sửa làm đẹp Sidebar và Marker động (V06). */
+/* - Chỉ cập nhật phiên bản để đồng bộ hóa với map-handler.js mới. */
 
 :root {
     --header-height: 60px;
