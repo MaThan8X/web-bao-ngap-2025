@@ -1,7 +1,4 @@
 # ftp-deploy.yml (Ver 05 - Dùng lại Lệnh Lftp Đã Chạy Tốt)
-# - Sửa lỗi: Thay 'htdocs' bằng '.' (triển khai toàn bộ nội dung repo).
-# - Sử dụng Hostname và Remote Path đã xác minh.
-
 name: FTP Deploy
 on:
   push:
@@ -20,11 +17,9 @@ jobs:
 
       - name: Deploy via lftp mirror
         env:
-          # Dùng HOSTNAME đã được xác minh hoạt động với lftp
           FTP_HOST: ${{ secrets.FTP_HOST }} 
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
-          # Path là thư mục đích mới (bao-ngap-2025/)
           FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }} 
         run: |
           lftp -u "$FTP_USER,$FTP_PASS" $FTP_HOST -e "
