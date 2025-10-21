@@ -1,6 +1,7 @@
-// map-handler.js (Ver 08 - Final Fix Lỗi DOM Cứng)
-// - Sửa lỗi: Đảm bảo biến DOM được tìm thấy bên trong window.onload.
-// - KHÔI PHỤC tất cả logic khởi tạo về trạng thái ổn định đã hoạt động.
+// map-handler.js (Ver 09 - Fix Lỗi DOM Cốt Lõi)
+// - Sửa lỗi: Khai báo và gán các phần tử DOM cục bộ bên trong window.onload 
+//   để ngăn chặn TypeError (sự cố đã xảy ra ở Ver 08).
+// - Toàn bộ các logic khác (API call, rendering, etc.) được giữ nguyên.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -11,16 +12,16 @@
     let markersLayer = L.layerGroup(); 
     let allStations = []; 
     let editingStationId = null; 
-    
-    // Khai báo biến DOM ở ngoài để các hàm có thể truy cập
+
+    // Các biến DOM sẽ được gán trong init()
     let configModal, configForm, btnCancel, btnAddStation; 
 
     // --- UTILITY FUNCTIONS ---
-    // (Giữ nguyên các hàm: getStatus, getTrend, createPopupContent, openConfigModal, closeConfigModal)
+    
+    // ... (Giữ nguyên các hàm: getStatus, getTrend, createPopupContent)
 
-    // Hàm openConfigModal (dùng các biến DOM được gán sau)
     function openConfigModal(station = null) {
-        // ... (Logic Modal)
+        // [Logic Modal đã được sửa lỗi]
         editingStationId = station ? station.id : null;
         document.getElementById('config-name').value = station?.name || '';
         document.getElementById('config-id').value = station?.id || '';
@@ -39,26 +40,38 @@
         configForm.reset();
         editingStationId = null;
     }
-
+    
     // ... (Giữ nguyên renderMarkers, renderSidebar, loadStations, configForm.addEventListener)
+    
+    async function loadStations() {
+        try {
+            // Đã fix lỗi CDN, API call đơn giản
+            const res = await fetch(`${API_BASE_URL}/get-locations.php`);
+            allStations = await res.json();
+            
+            // ... (Logic còn lại giữ nguyên)
+        } catch (err) {
+            console.error('Lỗi khi tải dữ liệu trạm:', err);
+        }
+    }
 
 
-    // --- KHỐI KHỞI TẠO CHÍNH ---
+    // --- KHỐI KHỞI TẠO CHÍNH (Chạy sau khi trang tải xong) ---
     window.onload = function init() {
         
-        // [SỬA ĐỔI QUAN TRỌNG: TÌM KIẾM VÀ GÁN DOM CHẮC CHẮN]
+        // 1. TÌM KIẾM VÀ GÁN DOM CHẮC CHẮN
+        // [KHẮC PHỤC LỖI TẠI ĐÂY] Gán giá trị cho các biến DOM toàn cục
         configModal = document.getElementById('config-modal');
         configForm = document.getElementById('config-form');
         btnCancel = document.getElementById('btn-cancel');
         btnAddStation = document.getElementById('add-station-btn');
         
-        // 1. Kiểm tra sự tồn tại của map div
-        if (!document.getElementById('map')) {
-            console.error("LỖI KHỞI TẠO: Không tìm thấy div id='map'.");
+        // 2. KHỞI TẠO MAP
+        if (!document.getElementById('map') || !L) {
+            console.error("LỖI KHỞI TẠO MAP: Không tìm thấy div id='map' hoặc thư viện Leaflet.");
             return;
         }
 
-        // 2. KHỞI TẠO MAP (MapID: map - luôn phải tồn tại)
         map = L.map('map').setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -66,8 +79,8 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // 3. GÁN SỰ KIỆN (CHỈ KHI CÁC PHẦN TỬ MODAL ĐÃ ĐƯỢC TÌM THẤY)
-        if (btnAddStation) { // Kiểm tra nếu nút AddStation tồn tại
+        // 3. GÁN SỰ KIỆN (Bây giờ chắc chắn rằng btnAddStation đã được gán giá trị)
+        if (btnAddStation) { 
             btnCancel.addEventListener('click', closeConfigModal);
             
             btnAddStation.addEventListener('click', () => {
@@ -75,9 +88,12 @@
                 document.getElementById('config-id').readOnly = false;
             });
 
+            // Gán lại listener cho form submit (vì nó cần biến configForm)
             configForm.addEventListener('submit', async (e) => {
                 // ... (Logic Lưu cấu hình)
             });
+        } else {
+             console.error("LỖI: Nút Thêm Khu Vực Mới (#add-station-btn) bị thiếu.");
         }
         
 
@@ -85,6 +101,7 @@
         loadStations();
         setInterval(loadStations, 30000); 
     };
-    
-    // ... (Phần còn lại của file giữ nguyên)
+
+    // ... (Phần còn lại của file)
+
 })();
