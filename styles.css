@@ -1,6 +1,6 @@
-/* styles.css (Ver 07 - Tối ưu hiển thị Sidebar sau khi bỏ Vol) */
-/* - Giữ nguyên các chỉnh sửa làm đẹp Sidebar và Marker động (V06). */
-/* - Chỉ cập nhật phiên bản để đồng bộ hóa với map-handler.js mới. */
+/* styles.css (Ver 08 - Sửa Marker thành hình tròn đơn giản) */
+/* - Mục tiêu: Thay Marker hình kim (pin) hiện tại bằng chấm tròn đơn giản, ẩn ID. */
+/* - Thay đổi: Chỉnh sửa .marker-pin thành hình tròn, loại bỏ style biến nó thành hình kim. */
 
 :root {
     --header-height: 60px;
@@ -320,25 +320,26 @@ body {
     cursor: not-allowed;
 }
 
-/* 5. LEAFLET MARKER CUSTOM STYLES (Điểm tròn động) */
+/* 5. LEAFLET MARKER CUSTOM STYLES (Chấm tròn động) */
 
 /* Vùng chứa chung cho icon */
 .custom-marker {
     position: relative;
-    width: 30px;
-    height: 42px;
+    /* Kích thước này phải khớp với iconSize: [20, 20] trong map-handler.js */
+    width: 20px;
+    height: 20px;
     user-select: none;
     cursor: pointer;
 }
 
-/* Hình dạng chân kim (pin head) */
+/* Hình dạng chấm tròn (pin head) */
 .marker-pin {
     width: 20px;
     height: 20px;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
+    border-radius: 50%; /* Chuyển thành hình tròn */
+    transform: none; /* Bỏ xoay 45deg */
     position: absolute;
-    left: 5px;
+    left: 0;
     top: 0;
     border: 2px solid #fff; /* Viền trắng nổi bật */
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
@@ -358,17 +359,9 @@ body {
     background-color: var(--color-nodata); 
 }
 
-/* Nhãn ID (chữ nhỏ) */
+/* Nhãn ID: BỎ HOÀN TOÀN (theo yêu cầu) */
 .marker-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -100%); /* Canh giữa theo pin */
-    font-size: 0.8em;
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 0 3px rgba(0,0,0,0.5);
-    z-index: 1; 
+    display: none !important;
 }
 
 
