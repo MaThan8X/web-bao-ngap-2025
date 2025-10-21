@@ -1,7 +1,6 @@
-// map-handler.js (Ver 11 - Final Fix Lỗi DOM & Submit)
-// - Fix lỗi DOM: Khai báo và gán các phần tử DOM bên trong window.onload.
-// - Fix lỗi Sidebar: renderSidebar đã thêm data-status cho CSS.
-// - Fix lỗi Submit: Báo lỗi chi tiết từ server.
+// map-handler.js  (Ver 12 - Fix Sidebar Logic & Animation)
+
+có thấy cod
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -13,6 +12,7 @@
     let allStations = []; 
     let editingStationId = null; 
 
+    // Các biến DOM sẽ được gán trong init()
     let configModal, configForm, btnCancel, btnAddStation; 
 
     // --- UTILITY FUNCTIONS ---
@@ -23,8 +23,10 @@
         if (mucnuoc >= 20) return 'warn';      
         return 'safe';                         
     }
-    
-    function getTrend() { return 'Ổn định'; }
+
+    function getTrend() {
+        return 'Ổn định'; // Giữ nguyên, cần dữ liệu lịch sử để tính
+    }
 
     function createPopupContent(station) {
         const status = getStatus(station.mucnuoc);
@@ -88,16 +90,10 @@
                 const popupContent = createPopupContent(station);
                 marker.bindPopup(popupContent, { closeButton: false, offset: L.point(0, -10) });
                 
-                marker.on('mouseover', function(e) {
+                // Mở popup khi click vào marker
+                marker.on('click', function(e) {
                     this.openPopup();
-                });
-                marker.on('mouseout', function(e) {
-                    setTimeout(() => {
-                        if (!e.target._popup._isOpen) return;
-                        e.target._popup.getElement().addEventListener('mouseout', () => {
-                            this.closePopup();
-                        });
-                    }, 50);
+                    openConfigModal(station); // Mở Modal khi click vào marker
                 });
                 
                 markersLayer.addLayer(marker);
@@ -113,35 +109,39 @@
         
         allStations.forEach(station => {
             const status = getStatus(station.mucnuoc);
-            const li = document.createElement('li');
-            li.className = `station-item`;
-            li.dataset.id = station.id;
-            li.dataset.status = status; // Thêm data-status cho CSS
             
-            li.innerHTML = `
+            // Sử dụng button thay vì li để thống nhất style với #add-station-btn
+            const btn = document.createElement('button');
+            btn.className = `station-item`;
+            btn.dataset.id = station.id;
+            btn.dataset.status = status; // Dùng cho CSS
+            
+            btn.innerHTML = `
                 <span class="station-item-name">${station.name || 'Chưa đặt tên'}</span>
                 <span class="station-item-id">ID: ${station.id} | ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : 'No Data'}</span>
             `;
             
-            li.addEventListener('click', () => {
+            btn.addEventListener('click', () => {
                 map.setView([station.lat, station.lon], 16);
                 openConfigModal(station);
             });
             
-            list.appendChild(li);
+            list.appendChild(btn);
         });
     }
 
     async function loadStations() {
         try {
             const res = await fetch(`${API_BASE_URL}/get-locations.php`);
-            
+            // Kiểm tra nếu API trả về lỗi hoặc JSON rỗng/không hợp lệ
             if (!res.ok) {
-                console.error(`Lỗi tải dữ liệu: HTTP ${res.status}`);
-                allStations = []; 
-            } else {
-                allStations = await res.json();
+                console.error("Lỗi khi fetch dữ liệu trạm:", res.statusText);
+                return;
             }
+            allStations = await res.json();
+            
+            // Nếu JSON không phải mảng, đặt lại là mảng rỗng
+            if (!Array.isArray(allStations)) allStations = []; 
             
             allStations.sort((a, b) => a.id.localeCompare(b.id));
 
@@ -167,7 +167,7 @@
 
     // --- FORM HANDLING ---
 
-    const handleFormSubmit = async (e) => {
+    configForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const id = document.getElementById('config-id').value.trim();
@@ -188,12 +188,6 @@
             const url = `${API_BASE_URL}/save-config.php?${params.toString()}`;
             
             const res = await fetch(url);
-            
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Server trả về lỗi HTTP ${res.status}. Chi tiết: ${errorText.substring(0, 50)}...`);
-            }
-            
             const json = await res.json();
             
             if (json.status === 'success') {
@@ -201,26 +195,26 @@
                 closeConfigModal();
                 loadStations(); 
             } else {
+                // [FIX LỖI LƯU] Báo cáo lỗi cụ thể từ PHP
                 alert('Lỗi khi lưu cấu hình: ' + (json.message || 'Không xác định'));
             }
             
         } catch (err) {
             console.error('Lỗi khi gửi cấu hình:', err);
-            alert('Lỗi kết nối hoặc xử lý dữ liệu: ' + err.message);
+            alert('Không thể kết nối đến server để lưu cấu hình. (Kiểm tra quyền ghi file 777)');
         }
-    };
-
+    });
 
     // --- KHỐI KHỞI TẠO CHÍNH (Chạy sau khi trang tải xong) ---
     window.onload = function init() {
         
-        // 1. TÌM KIẾM VÀ GÁN DOM
+        // 1. TÌM KIẾM VÀ GÁN DOM CHẮC CHẮN
         configModal = document.getElementById('config-modal');
         configForm = document.getElementById('config-form');
         btnCancel = document.getElementById('btn-cancel');
         btnAddStation = document.getElementById('add-station-btn');
         
-        // 2. KHỞI TẠO MAP 
+        // 2. KHỞI TẠO MAP
         if (!document.getElementById('map') || !L) {
             console.error("LỖI KHỞI TẠO MAP: Không tìm thấy div id='map' hoặc thư viện Leaflet.");
             return;
@@ -233,18 +227,20 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // 3. GÁN SỰ KIỆN (Kiểm tra sự tồn tại của các phần tử)
-        if (configForm && btnAddStation && btnCancel) { 
+        // 3. GÁN SỰ KIỆN (Bây giờ chắc chắn rằng các phần tử đã được gán giá trị)
+        if (btnAddStation) { 
+            configModal.querySelector('.modal-overlay').addEventListener('click', (e) => {
+                if (e.target === configModal) closeConfigModal();
+            });
+
             btnCancel.addEventListener('click', closeConfigModal);
             
             btnAddStation.addEventListener('click', () => {
                 openConfigModal(null);
                 document.getElementById('config-id').readOnly = false;
             });
-
-            configForm.addEventListener('submit', handleFormSubmit);
         } else {
-             console.error("LỖI DOM: Các nút tương tác (Modal/Button/Form) bị thiếu.");
+             console.error("LỖI: Nút Thêm Khu Vực Mới (#add-station-btn) bị thiếu.");
         }
         
 
