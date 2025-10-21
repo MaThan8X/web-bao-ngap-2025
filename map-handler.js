@@ -1,7 +1,6 @@
-// map-handler.js (Ver 16 - Sửa lỗi cứng Modal & Bỏ hiển thị Vol)
-// - Sửa lỗi: Đảm bảo Modal Cấu hình hiển thị (sử dụng document.getElementById lại bên trong openConfigModal nếu biến global bị null/undefined).
-// - Yêu cầu mới: Loại bỏ thông tin Điện áp (Vol) khỏi Popup và Sidebar.
-// - Giữ nguyên: Chức năng Zoom/Setting (Cấu hình) và Marker động.
+// map-handler.js (Ver 17 - Fix Marker thành hình tròn đơn giản, ẩn ID)
+// - Sửa lỗi: Đảm bảo Modal Cấu hình hiển thị (từ Ver 16).
+// - Yêu cầu mới: Thay Marker hiện tại (pin + ID) bằng hình tròn đơn giản (marker-pin) và ẩn ID trên bản đồ.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -49,7 +48,6 @@
             <div class="popup-content">
                 <h3 class="${status}">${stationName} (${station.id})</h3>
                 <p><strong>Mức nước:</strong> ${station.mucnuoc === undefined || station.mucnuoc === null ? 'N/A' : station.mucnuoc + ' cm'}</p>
-                <!-- Đã loại bỏ hiển thị Vol theo yêu cầu -->
                 <p><strong>Trạng thái:</strong> <span class="status-label ${status}">${statusText}</span></p>
                 <p><strong>Cập nhật cuối:</strong> ${station.last_update ? station.last_update : 'N/A'}</p>
                 <p><strong>Xu hướng:</strong> ${trendText}</p>
@@ -73,7 +71,6 @@
             <div class="station-info">
                 <span class="status-indicator ${status}"></span>
                 <span class="station-name">${stationName}</span>
-                <!-- Bỏ hiển thị Vol, chỉ giữ lại Mức nước -->
                 <span class="station-id">Mức: ${mucnuocText}</span>
                 <span class="station-id status-text ${status}">${statusText}</span>
             </div>
@@ -128,7 +125,6 @@
 
         if (!configModal) {
             console.error("LỖI CỨNG DOM: Modal Cấu hình (config-modal) chưa được tìm thấy. Vui lòng kiểm tra index.html.");
-            // Thay alert bằng thông báo nội bộ nếu cần
             return;
         }
 
@@ -146,7 +142,6 @@
              console.error("LỖI CẤU TRÚC: Thiếu các trường ID, Tên hoặc Tọa độ trong Modal.");
              return;
         }
-
 
         configIdInput.readOnly = false;
         
@@ -279,12 +274,14 @@
 
             const status = getStatus(station.mucnuoc);
             
+            // THAY ĐỔI: Sử dụng customIcon mới chỉ chứa marker-pin (hình tròn)
             const customIcon = L.divIcon({
                 className: 'custom-marker',
-                html: `<div class="marker-pin ${status}"></div><div class="marker-label">${station.id}</div>`,
-                iconSize: [30, 42], 
-                iconAnchor: [15, 42], 
-                popupAnchor: [0, -40] 
+                // Bỏ marker-label (ẩn ID)
+                html: `<div class="marker-pin ${status}"></div>`, 
+                iconSize: [20, 20], // Giảm kích thước về hình tròn
+                iconAnchor: [10, 10], // Đảm bảo tâm nằm ở giữa
+                popupAnchor: [0, -10] 
             });
 
             const marker = L.marker([station.lat, station.lon], { icon: customIcon })
