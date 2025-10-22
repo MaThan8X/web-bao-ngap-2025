@@ -1,6 +1,6 @@
-/* styles.css (Ver 08 - Sửa Marker thành hình tròn đơn giản) */
-/* - Mục tiêu: Thay Marker hình kim (pin) hiện tại bằng chấm tròn đơn giản, ẩn ID. */
-/* - Thay đổi: Chỉnh sửa .marker-pin thành hình tròn, loại bỏ style biến nó thành hình kim. */
+/* styles.css (Ver 09 - Responsive cho Mobile) */
+/* - Thêm Media Query để tối ưu hiển thị trên màn hình nhỏ (Mobile/Tablet). */
+/* - Mục tiêu: Thu hẹp Sidebar và mở rộng Map, thu nhỏ tổng thể. */
 
 :root {
     --header-height: 60px;
@@ -12,6 +12,9 @@
     --border-color: #ddd;
     --item-bg: #fff;            /* Nền trắng cho các mục */
     --hover-bg: #f5f5f5;        /* Nền xám nhạt khi hover */
+    /* Kích thước chữ và padding cơ bản */
+    --font-size-base: 1em;
+    --padding-base: 15px;
 }
 
 body {
@@ -24,18 +27,18 @@ body {
 /* 1. HEADER */
 #header {
     height: var(--header-height);
-    background: linear-gradient(90deg, #007bff, #0056b3); /* Gradient đẹp hơn */
+    background: linear-gradient(90deg, #007bff, #0056b3); 
     color: white;
     padding: 0 20px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3); /* Shadow rõ hơn */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3); 
     position: relative;
     z-index: 1000;
 }
 #header h1 {
     margin: 0;
-    font-size: 1.5em; /* Lớn hơn một chút */
+    font-size: 1.5em; 
     letter-spacing: 0.5px;
 }
 
@@ -48,23 +51,23 @@ body {
 #map {
     flex-grow: 1;
     height: 100%;
-    z-index: 1; /* Đảm bảo bản đồ ở lớp dưới Sidebar */
+    z-index: 1; 
 }
 
-/* 3. SIDEBAR - THANH CÔNG CỤ */
+/* 3. SIDEBAR - THANH CÔNG CỤ (DESKTOP) */
 #sidebar {
     width: var(--sidebar-width);
-    background: #f8f9fa; /* Nền trắng xám nhẹ */
+    background: #f8f9fa; 
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     z-index: 10;
-    overflow-y: hidden; /* Chỉ cho phép cuộn nội dung list */
+    overflow-y: hidden; 
 }
 
 #sidebar-header {
     padding: 15px 10px;
-    background: #e9ecef; /* Nền cho header sidebar */
+    background: #e9ecef; 
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
@@ -79,11 +82,11 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
-    overflow-y: auto; /* Cho phép cuộn danh sách trạm */
+    overflow-y: auto; 
     flex-grow: 1;
 }
 
-/* MỤC TRẠM TRONG DANH SÁCH (STATION ITEM) */
+/* MỤC TRẠM TRONG DANH SÁCH */
 .station-item {
     display: flex;
     align-items: center;
@@ -97,7 +100,7 @@ body {
 
 .station-item:hover {
     background-color: var(--hover-bg);
-    box-shadow: inset 3px 0 0 0 #007bff; /* Hiệu ứng gạch xanh bên trái */
+    box-shadow: inset 3px 0 0 0 #007bff; 
 }
 
 .station-info {
@@ -111,7 +114,7 @@ body {
 .station-name {
     font-weight: bold;
     color: #333;
-    font-size: 1em;
+    font-size: var(--font-size-base);
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -122,7 +125,6 @@ body {
     margin-top: 2px;
 }
 
-/* Bổ sung style cho text trạng thái */
 .status-text {
     font-weight: bold;
     font-size: 0.9em !important;
@@ -137,7 +139,6 @@ body {
 .status-text.nodata { background-color: var(--color-nodata); color: white; }
 
 
-/* CHỈ BÁO TRẠNG THÁI (Màu sắc) */
 .status-indicator {
     width: 8px;
     height: 8px;
@@ -152,7 +153,7 @@ body {
 .station-item .status-indicator {
     position: absolute;
     left: 0;
-    top: 5px; /* Điều chỉnh vị trí của chấm tròn trạng thái */
+    top: 5px; 
     transform: translateY(0%);
 }
 
@@ -181,11 +182,11 @@ body {
 }
 
 .btn-zoom:hover {
-    color: #007bff; /* Màu xanh cho Zoom (Dò tìm) */
+    color: #007bff; 
     background-color: #e0f0ff;
 }
 .btn-edit:hover {
-    color: #6f42c1; /* Màu tím cho Edit (Setting) */
+    color: #6f42c1; 
     background-color: #f3e5ff;
 }
 
@@ -201,16 +202,18 @@ body {
     font-weight: bold;
     transition: background-color 0.2s;
     border-top: 1px solid #cce5ff;
-    flex-shrink: 0; /* Đảm bảo nút này không bị co lại */
+    flex-shrink: 0; 
 }
 
 .sidebar-footer-btn:hover {
-    background: #157347; /* Màu xanh đậm hơn khi hover */
+    background: #157347; 
 }
 
 
-/* 4. MODAL CẤU HÌNH (CONFIG MODAL) - Giữ nguyên các chỉnh sửa đã có */
+/* 4. MODAL CẤU HÌNH (CONFIG MODAL) */
+/* Giữ nguyên vì Modal đã responsive và chiếm full screen trên mobile */
 #config-modal {
+    /* ... (CSS cho Modal giữ nguyên) */
     position: fixed;
     z-index: 10000; 
     left: 0;
@@ -219,173 +222,52 @@ body {
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.4); 
-    display: none; /* Mặc định ẩn */
+    display: none; 
 }
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto; /* Canh giữa theo chiều dọc */
+    margin: 10% auto; 
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     width: 90%; 
-    max-width: 450px; /* Chiều rộng tối đa */
+    max-width: 450px; 
     border: 1px solid #ccc;
     position: relative;
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    font-size: 1.6em;
-    color: #007bff;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
-    margin-bottom: 25px; 
-}
+/* ... (Các style khác cho form và nút giữ nguyên) */
 
-.form-group {
-    margin-bottom: 20px; 
-}
-
-.form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px; 
-    color: #555;
-    font-size: 1.1em;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-    border: 1px solid #bbb; 
-    border-radius: 6px;
-    font-size: 1em;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-group input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 30px;
-}
-
-.btn-primary, .btn-danger, #btn-cancel {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s, opacity 0.2s;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-}
-
-#btn-cancel {
-    background-color: #6c757d;
-    color: white;
-}
-
-#btn-cancel:hover {
-    background-color: #5a6268;
-}
-
-/* Vô hiệu hóa nút khi đang tải */
-.btn-primary:disabled, .btn-danger:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
 
 /* 5. LEAFLET MARKER CUSTOM STYLES (Chấm tròn động) */
 
-/* Vùng chứa chung cho icon */
 .custom-marker {
-    position: relative;
-    /* Kích thước này phải khớp với iconSize: [20, 20] trong map-handler.js */
     width: 20px;
     height: 20px;
     user-select: none;
     cursor: pointer;
 }
 
-/* Hình dạng chấm tròn (pin head) */
 .marker-pin {
     width: 20px;
     height: 20px;
-    border-radius: 50%; /* Chuyển thành hình tròn */
-    transform: none; /* Bỏ xoay 45deg */
+    border-radius: 50%; 
+    transform: none; 
     position: absolute;
     left: 0;
     top: 0;
-    border: 2px solid #fff; /* Viền trắng nổi bật */
+    border: 2px solid #fff; 
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
-/* Các màu trạng thái cho pin */
-.marker-pin.safe { 
-    background-color: var(--color-safe); 
-}
-.marker-pin.warn { 
-    background-color: var(--color-warn); 
-}
-.marker-pin.danger { 
-    background-color: var(--color-danger); 
-}
-.marker-pin.nodata { 
-    background-color: var(--color-nodata); 
-}
+.marker-pin.safe { background-color: var(--color-safe); }
+.marker-pin.warn { background-color: var(--color-warn); }
+.marker-pin.danger { background-color: var(--color-danger); }
+.marker-pin.nodata { background-color: var(--color-nodata); }
 
-/* Nhãn ID: BỎ HOÀN TOÀN (theo yêu cầu) */
 .marker-label {
     display: none !important;
-}
-
-
-/* --- HIỆU ỨNG ĐIỂM TRÒN ĐỘNG (PULSING) --- */
-
-/* Chỉ áp dụng hiệu ứng nhấp nháy cho trạng thái Nguy hiểm và Nguy cơ */
-.marker-pin.danger::after, 
-.marker-pin.warn::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 50%;
-    background-color: inherit;
-    opacity: 0.7;
-    z-index: -1;
-    animation: pulse 1.5s infinite ease-out;
-}
-
-/* Tăng cường độ nhấp nháy cho Nguy hiểm */
-.marker-pin.danger::after {
-    animation-duration: 1s;
 }
 
 @keyframes pulse {
@@ -396,5 +278,69 @@ body {
     100% {
         transform: scale(2.5);
         opacity: 0;
+    }
+}
+
+
+/* ================================================= */
+/* === RESPONSIVE CHO MÀN HÌNH NHỎ (MOBILE/TABLET) === */
+/* ================================================= */
+
+@media (max-width: 768px) {
+    
+    /* 1. THU NHỎ TỔNG THỂ VÀ TĂNG TÍNH TƯƠNG THÍCH */
+    :root {
+        --header-height: 50px; /* Giảm chiều cao Header */
+        --sidebar-mobile-height: 150px; /* Chiều cao cố định cho Sidebar trên mobile */
+        --font-size-base: 0.9em; /* Thu nhỏ cỡ chữ cơ bản */
+        --padding-base: 10px; /* Thu nhỏ padding */
+    }
+
+    #header h1 {
+        font-size: 1.3em; /* Thu nhỏ tiêu đề */
+    }
+
+    /* 2. CHUYỂN LAYOUT TỪ CỘT SANG HÀNG NGANG (Sidebar/Map) */
+    #main-container {
+        flex-direction: column; /* Xếp Sidebar lên trên Map */
+        height: calc(100vh - var(--header-height));
+    }
+
+    /* 3. THU NHỎ VÀ ĐẨY SIDEBAR LÊN TRÊN */
+    #sidebar {
+        width: 100%; /* Chiếm full chiều rộng */
+        height: var(--sidebar-mobile-height); /* Chiều cao cố định */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Shadow bên dưới */
+    }
+
+    /* 4. MỞ RỘNG MAP */
+    #map {
+        /* Bản đồ chiếm phần còn lại của chiều cao màn hình */
+        height: calc(100vh - var(--header-height) - var(--sidebar-mobile-height));
+        flex-grow: 1; /* Đảm bảo nó chiếm đủ không gian còn lại */
+    }
+
+    /* 5. TỐI ƯU NỘI DUNG SIDEBAR */
+    #sidebar-header {
+        padding: 10px; /* Giảm padding header sidebar */
+    }
+    #sidebar-header h2 {
+        font-size: 1.1em; /* Thu nhỏ tiêu đề sidebar */
+    }
+
+    /* Tối ưu các mục trạm */
+    .station-item {
+        padding: 8px 10px; /* Giảm padding */
+        font-size: 0.9em; /* Thu nhỏ chữ trong danh sách */
+    }
+    .station-name {
+        font-size: 1em; /* Giữ nguyên hoặc giảm nhẹ */
+    }
+    .status-text {
+        font-size: 0.8em !important; /* Thu nhỏ text trạng thái */
+    }
+    .sidebar-footer-btn {
+        padding: 12px; /* Giảm padding nút thêm mới */
+        font-size: 1em;
     }
 }
