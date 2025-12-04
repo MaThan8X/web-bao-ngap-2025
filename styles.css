@@ -1,19 +1,14 @@
-/* styles.css (Ver 10 - KHÔI PHỤC HIỆU ỨNG MARKER NHẤP NHÁY) */
-/* - Sửa lỗi: Hiệu ứng tỏa sáng/nhấp nháy (pulse) trên Marker Danger/Warn đã bị mất. */
-/* - Giữ nguyên: Responsive cho mobile (Ver 09) và Marker hình tròn, ẩn ID (Ver 08). */
+/* styles.css (Ver 04 - Tối ưu Form Modal và Nút Lưu) */
 
 :root {
     --header-height: 60px;
     --sidebar-width: 280px;
-    --color-safe: #198754;      
-    --color-warn: #ffc107;      
-    --color-danger: #dc3545;    
-    --color-nodata: #6c757d;    
+    --color-safe: #198754;      /* Xanh lá */
+    --color-warn: #ffc107;      /* Vàng */
+    --color-danger: #dc3545;    /* Đỏ */
+    --color-nodata: #6c757d;    /* Xám (Chưa có dữ liệu) */
     --border-color: #ddd;
-    --item-bg: #fff;            
-    --hover-bg: #f5f5f5;        
-    --font-size-base: 1em;
-    --padding-base: 15px;
+    --item-bg: #fff;            /* Nền trắng cho các mục */
 }
 
 body {
@@ -26,212 +21,161 @@ body {
 /* 1. HEADER */
 #header {
     height: var(--header-height);
-    background: linear-gradient(90deg, #007bff, #0056b3); 
+    background: #007bff; 
     color: white;
     padding: 0 20px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3); 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     position: relative;
     z-index: 1000;
 }
 #header h1 {
     margin: 0;
-    font-size: 1.5em; 
-    letter-spacing: 0.5px;
+    font-size: 1.4em;
+    font-weight: 600;
 }
 
-/* 2. MAIN CONTAINER VÀ MAP */
+/* 2. MAIN LAYOUT */
 #main-container {
     display: flex;
     height: calc(100vh - var(--header-height));
 }
 
-#map {
-    flex-grow: 1;
-    height: 100%;
-    z-index: 1; 
-}
-
 /* 3. SIDEBAR */
 #sidebar {
     width: var(--sidebar-width);
-    background: #f8f9fa; 
-    display: flex;
-    flex-direction: column;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    z-index: 10;
-    overflow-y: hidden; 
-}
-
-#sidebar-header {
-    padding: 15px 10px;
-    background: #e9ecef; 
-    border-bottom: 1px solid var(--border-color);
+    background: #f8f9fa;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    padding: 10px; 
     flex-shrink: 0;
-}
-
-#sidebar-header h2 {
-    margin: 0;
-    font-size: 1.2em;
-    color: #343a40;
 }
 
 #station-list {
     list-style: none;
     padding: 0;
-    margin: 0;
-    overflow-y: auto; 
-    flex-grow: 1;
+    margin: 10px 0 0 0; 
 }
 
-/* MỤC TRẠM TRONG DANH SÁCH */
-.station-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    background-color: var(--item-bg);
-}
-
-.station-item:hover {
-    background-color: var(--hover-bg);
-    box-shadow: inset 3px 0 0 0 #007bff; 
-}
-
-.station-info {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.station-name {
-    font-weight: bold;
-    color: #333;
-    font-size: var(--font-size-base);
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.station-id {
-    font-size: 0.8em;
-    color: #6c757d;
-    margin-top: 2px;
-}
-
-.status-text {
-    font-weight: bold;
-    font-size: 0.9em !important;
-    margin-top: 4px;
-    padding: 2px 5px;
-    border-radius: 4px;
-    width: fit-content;
-}
-.status-text.safe { background-color: var(--color-safe); color: white; }
-.status-text.warn { background-color: var(--color-warn); color: #333; }
-.status-text.danger { background-color: var(--color-danger); color: white; }
-.status-text.nodata { background-color: var(--color-nodata); color: white; }
-
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 10px;
-    flex-shrink: 0;
-}
-.station-item .station-info {
-    position: relative;
-    padding-left: 18px;
-}
-.station-item .status-indicator {
-    position: absolute;
-    left: 0;
-    top: 5px; 
-    transform: translateY(0%);
-}
-
-.status-indicator.safe { background-color: var(--color-safe); }
-.status-indicator.warn { background-color: var(--color-warn); }
-.status-indicator.danger { background-color: var(--color-danger); }
-.status-indicator.nodata { background-color: var(--color-nodata); }
-
-/* ACTIONS (Zoom và Edit) */
-.station-actions {
-    display: flex;
-    gap: 5px;
-    flex-shrink: 0;
-}
-
-.btn-zoom, .btn-edit {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    color: #6c757d;
-    padding: 5px;
-    line-height: 1;
-    transition: color 0.2s, background-color 0.2s;
-    border-radius: 4px;
-}
-
-.btn-zoom:hover {
-    color: #007bff; 
-    background-color: #e0f0ff;
-}
-.btn-edit:hover {
-    color: #6f42c1; 
-    background-color: #f3e5ff;
-}
-
-/* FOOTER NÚT THÊM MỚI */
-.sidebar-footer-btn {
+/* STYLE CHUNG CHO CẢ NÚT 'THÊM KHU VỰC MỚI' VÀ CÁC MỤC TRẠM */
+.station-item, 
+#add-station-btn {
+    display: block;
     width: 100%;
-    padding: 15px;
+    text-align: left;
+    padding: 10px;
+    margin-bottom: 5px; 
+    border: 1px solid #ccc;
+    border-radius: 4px; 
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 1.05em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    background: var(--item-bg);
+    color: #333; /* Màu chữ */
+}
+
+/* Style riêng cho nút Add */
+#add-station-btn {
+    margin-top: 0; 
+    margin-bottom: 15px; 
     background: var(--color-safe);
     color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
     font-weight: bold;
-    transition: background-color 0.2s;
-    border-top: 1px solid #cce5ff;
-    flex-shrink: 0; 
+    text-align: center;
+    border-color: var(--color-safe);
 }
 
-.sidebar-footer-btn:hover {
-    background: #157347; 
+#add-station-btn:hover {
+    background: #157347;
+    color: white;
+}
+
+/* Nút Trạm */
+.station-item:hover {
+    background: #e9ecef;
+}
+
+/* Hiển thị Trạng thái bằng border left */
+.station-item[data-status="danger"] {
+    border-left: 5px solid var(--color-danger);
+    background: #fff3f4; 
+}
+.station-item[data-status="warn"] {
+    border-left: 5px solid var(--color-warn);
+    background: #fffceb;
+}
+.station-item[data-status="safe"] {
+    border-left: 5px solid var(--color-safe);
+    background: #f1f8f1;
+}
+
+.station-item-name {
+    font-weight: bold;
+    display: block;
+    color: #333;
+}
+
+.station-item-id {
+    font-size: 0.85em;
+    color: #6c757d;
 }
 
 
-/* 4. MODAL CẤU HÌNH (CONFIG MODAL) */
-#config-modal {
+/* 4. MAP AREA */
+#map {
+    flex-grow: 1;
+    z-index: 1; 
+}
+
+/* 5. CUSTOM MARKER (Hiệu ứng tỏa ra) */
+
+/* @keyframes pulse */
+@keyframes pulse {
+    0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+    100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+}
+
+.water-marker {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    cursor: pointer;
+    /* ÁP DỤNG HIỆU ỨNG PULSE */
+    animation: pulse 2s infinite; 
+}
+
+.water-marker-nodata { background-color: var(--color-nodata); border-color: #aaa; }
+.water-marker-safe { background-color: var(--color-safe); border-color: var(--color-safe); }
+.water-marker-warn { background-color: var(--color-warn); border-color: var(--color-warn); }
+.water-marker-danger { background-color: var(--color-danger); border-color: var(--color-danger); }
+
+
+/* 6. MODAL (Tối ưu Form - Ver 04) */
+.modal-overlay {
     position: fixed;
-    z-index: 10000; 
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4); 
+    background: rgba(0,0,0,0.5);
     display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
 }
 
 .modal-content {
-    background-color: #fff;
-    margin: 10% auto; 
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    width: 90%; 
-    max-width: 450px; 
+    background: white;
+    padding: 30px; /* Tăng padding */
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Bóng đổ mạnh mẽ hơn */
+    width: 380px; /* Tăng chiều rộng */
     border: 1px solid #ccc;
-    position: relative;
 }
 
 .modal-content h2 {
@@ -240,17 +184,17 @@ body {
     color: #007bff;
     border-bottom: 2px solid #007bff;
     padding-bottom: 10px;
-    margin-bottom: 25px; 
+    margin-bottom: 25px; /* Tăng khoảng cách dưới */
 }
 
 .form-group {
-    margin-bottom: 20px; 
+    margin-bottom: 20px; /* Tăng khoảng cách giữa các dòng */
 }
 
 .form-group label {
     display: block;
     font-weight: bold;
-    margin-bottom: 8px; 
+    margin-bottom: 8px; /* Tăng khoảng cách dưới label */
     color: #555;
     font-size: 1.1em;
 }
@@ -259,7 +203,7 @@ body {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
-    border: 1px solid #bbb; 
+    border: 1px solid #bbb; /* Border rõ ràng hơn */
     border-radius: 6px;
     font-size: 1em;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -273,196 +217,37 @@ body {
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: flex-end; /* Căn nút sang phải */
+    padding-top: 20px;
+    border-top: 1px solid #eee;
     margin-top: 30px;
 }
 
-.btn-primary, .btn-danger, #btn-cancel {
+.modal-actions button {
     padding: 10px 20px;
+    margin-left: 10px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-size: 1.1em;
     font-weight: bold;
-    transition: background-color 0.2s, opacity 0.2s;
+    transition: background 0.2s;
 }
 
-.btn-primary {
-    background-color: #007bff;
+#btn-save {
+    background: #007bff;
     color: white;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
+#btn-save:hover {
+    background: #0056b3;
 }
 
 #btn-cancel {
-    background-color: #6c757d;
+    background: #6c757d;
     color: white;
 }
 
 #btn-cancel:hover {
-    background-color: #5a6268;
-}
-
-.btn-primary:disabled, .btn-danger:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* 5. LEAFLET MARKER CUSTOM STYLES (Chấm tròn động) */
-
-.custom-marker {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    user-select: none;
-    cursor: pointer;
-}
-
-.marker-pin {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%; 
-    transform: none; 
-    position: absolute;
-    left: 0;
-    top: 0;
-    border: 2px solid #fff; 
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    /* THÊM VỊ TRÍ TƯƠNG ĐỐI để ::after có thể định vị */
-    position: relative; 
-}
-
-/* Đã thêm lại vị trí tương đối cho .marker-pin. */
-
-
-.marker-pin.safe { 
-    background-color: var(--color-safe); 
-}
-.marker-pin.warn { 
-    background-color: var(--color-warn); 
-}
-.marker-pin.danger { 
-    background-color: var(--color-danger); 
-}
-.marker-pin.nodata { 
-    background-color: var(--color-nodata); 
-}
-
-.marker-label {
-    display: none !important;
-}
-
-
-/* --- HIỆU ỨNG ĐIỂM TRÒN ĐỘNG (PULSING) --- */
-
-/* Chỉ áp dụng hiệu ứng nhấp nháy cho trạng thái Nguy hiểm và Nguy cơ */
-.marker-pin.danger::after, 
-.marker-pin.warn::after {
-    content: '';
-    /* THAY ĐỔI: Dùng thuộc tính tuyệt đối để căn giữa trên .marker-pin */
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 50%;
-    background-color: inherit;
-    opacity: 0.7;
-    z-index: -1;
-    animation: pulse 1.5s infinite ease-out;
-}
-
-/* Tăng cường độ nhấp nháy cho Nguy hiểm */
-.marker-pin.danger::after {
-    animation-duration: 1s;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
-    100% {
-        /* Tăng kích thước tỏa ra và giảm opacity */
-        transform: scale(3.5); /* Tăng kích thước tỏa ra lớn hơn */
-        opacity: 0;
-    }
-}
-
-
-/* ================================================= */
-/* === RESPONSIVE CHO MÀN HÌNH NHỎ (MOBILE/TABLET) === */
-/* ================================================= */
-
-@media (max-width: 768px) {
-    
-    /* 1. THU NHỎ TỔNG THỂ VÀ TĂNG TÍNH TƯƠNG THÍCH */
-    :root {
-        --header-height: 50px; 
-        --sidebar-mobile-height: 150px; 
-        --font-size-base: 0.9em; 
-        --padding-base: 10px; 
-    }
-
-    #header h1 {
-        font-size: 1.3em; 
-    }
-
-    /* 2. CHUYỂN LAYOUT */
-    #main-container {
-        flex-direction: column; 
-        height: calc(100vh - var(--header-height));
-    }
-
-    /* 3. THU NHỎ VÀ ĐẨY SIDEBAR LÊN TRÊN */
-    #sidebar {
-        width: 100%; 
-        height: var(--sidebar-mobile-height); 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-    }
-
-    /* 4. MỞ RỘNG MAP */
-    #map {
-        height: calc(100vh - var(--header-height) - var(--sidebar-mobile-height));
-        flex-grow: 1; 
-    }
-
-    /* 5. TỐI ƯU NỘI DUNG SIDEBAR */
-    #sidebar-header {
-        padding: 10px; 
-    }
-    #sidebar-header h2 {
-        font-size: 1.1em; 
-    }
-
-    .station-item {
-        padding: 8px 10px; 
-        font-size: 0.9em; 
-    }
-    .station-name {
-        font-size: 1em; 
-    }
-    .status-text {
-        font-size: 0.8em !important; 
-    }
-    .sidebar-footer-btn {
-        padding: 12px; 
-        font-size: 1em;
-    }
-
-    /* Tối ưu Modal trên mobile */
-    .modal-content {
-        margin: 5% auto; /* Đẩy lên cao hơn một chút */
-    }
+    background: #5a6268;
 }
