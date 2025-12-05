@@ -1,5 +1,5 @@
 // map-handler.js (Ver 15 - Force No-Cache Headers)
-// - Fix: Thêm headers no-cache vào fetch request.
+// - Fix: Thêm headers no-cache vào fetch request...
 
 (function() {
     const API_BASE_URL = window.location.origin; 
