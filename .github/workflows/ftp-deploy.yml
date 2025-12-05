@@ -1,5 +1,5 @@
-# ftp-deploy.yml (Ver 05 - Dùng lại Lệnh Lftp Đã Chạy Tốt)
 name: FTP Deploy
+
 on:
   push:
     branches:
@@ -17,15 +17,13 @@ jobs:
 
       - name: Deploy via lftp mirror
         env:
-          FTP_HOST: ${{ secrets.FTP_HOST }} 
+          FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
-          FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }} 
+          FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
         run: |
           lftp -u "$FTP_USER,$FTP_PASS" $FTP_HOST -e "
-            set ftp:ssl-allow no
-            # [SỬA ĐỔI] mirror -R --verbose từ thư mục hiện tại (./)
-            # sang thư mục đích (bao-ngap-2025/)
-            mirror -R --verbose . $FTP_REMOTE_PATH
-            quit
+          set ssl:verify-certificate no
+          mirror -R --verbose --parallel=2 --exclude .git/ --exclude .github/ --exclude .gitignore ./ $FTP_REMOTE_PATH
+          quit
           "
