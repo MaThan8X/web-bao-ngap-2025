@@ -1,4 +1,4 @@
-/* styles.css (Ver 05 - Tối ưu hiển thị trên Điện Thoại) */
+/* styles.css (Ver 06 - Thêm Style cho Nút Cấu Hình Sidebar) */
 
 :root {
     --header-height: 60px;
@@ -79,9 +79,11 @@ body {
 /* --- STATION ITEM STYLES --- */
 .station-item, 
 #add-station-btn {
-    display: block;
+    display: flex; /* Dùng Flexbox để căn chỉnh tên và nút sửa */
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
-    box-sizing: border-box; /* Quan trọng để padding không làm vỡ layout */
+    box-sizing: border-box; 
     text-align: left;
     padding: 10px;
     margin-bottom: 5px; 
@@ -93,8 +95,15 @@ body {
     font-size: 1em;
 }
 
+/* Wrapper cho thông tin text để nó chiếm hết khoảng trống */
+.station-info {
+    flex-grow: 1;
+    overflow: hidden; /* Tránh vỡ layout nếu tên quá dài */
+}
+
 /* Nút Thêm Mới */
 #add-station-btn {
+    display: block; /* Nút thêm mới vẫn là block text căn giữa */
     margin-bottom: 10px;
     background: var(--color-safe);
     color: white;
@@ -120,15 +129,20 @@ body {
     color: #666;
 }
 
-/* Nút Sửa nhỏ gọn */
+/* Nút Sửa nhỏ gọn (⚙️) */
 .btn-edit-sidebar {
-    background: none; 
+    background: #fff; 
     border: 1px solid #ccc; 
     border-radius: 4px; 
-    padding: 5px 8px; 
+    padding: 5px 10px; 
     cursor: pointer; 
-    margin-left: 5px;
-    font-size: 1.1em;
+    margin-left: 8px;
+    font-size: 1.2em;
+    flex-shrink: 0; /* Không bị co lại */
+    transition: background 0.2s;
+}
+.btn-edit-sidebar:hover {
+    background: #e9ecef;
 }
 
 /* --- MARKER ANIMATION --- */
