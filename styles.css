@@ -1,4 +1,4 @@
-/* styles.css (Ver 04 - Tối ưu Form Modal và Nút Lưu) */
+/* styles.css (Ver 05 - Tối ưu hiển thị trên Điện Thoại) */
 
 :root {
     --header-height: 60px;
@@ -6,16 +6,16 @@
     --color-safe: #198754;      /* Xanh lá */
     --color-warn: #ffc107;      /* Vàng */
     --color-danger: #dc3545;    /* Đỏ */
-    --color-nodata: #6c757d;    /* Xám (Chưa có dữ liệu) */
+    --color-nodata: #6c757d;    /* Xám */
     --border-color: #ddd;
-    --item-bg: #fff;            /* Nền trắng cho các mục */
+    --item-bg: #fff;
 }
 
 body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    overflow: hidden; 
+    overflow: hidden; /* Ngăn cuộn trang chính */
 }
 
 /* 1. HEADER */
@@ -23,7 +23,7 @@ body {
     height: var(--header-height);
     background: #007bff; 
     color: white;
-    padding: 0 20px;
+    padding: 0 15px;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -32,54 +32,70 @@ body {
 }
 #header h1 {
     margin: 0;
-    font-size: 1.4em;
+    font-size: 1.2em; /* Giảm nhẹ font chữ header */
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* 2. MAIN LAYOUT */
+/* 2. MAIN LAYOUT (DESKTOP DEFAULT) */
 #main-container {
     display: flex;
     height: calc(100vh - var(--header-height));
+    position: relative;
 }
 
-/* 3. SIDEBAR */
+/* 3. SIDEBAR (THANH VỊ TRÍ) */
 #sidebar {
     width: var(--sidebar-width);
     background: #f8f9fa;
     border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 999;
+}
+
+/* Vùng chứa danh sách có thể cuộn */
+#station-list-container {
+    flex-grow: 1;
     overflow-y: auto;
-    padding: 10px; 
-    flex-shrink: 0;
+    padding: 10px;
 }
 
 #station-list {
     list-style: none;
     padding: 0;
-    margin: 10px 0 0 0; 
+    margin: 0;
 }
 
-/* STYLE CHUNG CHO CẢ NÚT 'THÊM KHU VỰC MỚI' VÀ CÁC MỤC TRẠM */
+/* 4. MAP AREA */
+#map {
+    flex-grow: 1;
+    z-index: 1; 
+    height: 100%;
+}
+
+/* --- STATION ITEM STYLES --- */
 .station-item, 
 #add-station-btn {
     display: block;
     width: 100%;
+    box-sizing: border-box; /* Quan trọng để padding không làm vỡ layout */
     text-align: left;
     padding: 10px;
     margin-bottom: 5px; 
     border: 1px solid #ccc;
     border-radius: 4px; 
     cursor: pointer;
-    transition: background 0.1s;
-    font-size: 1.05em;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     background: var(--item-bg);
-    color: #333; /* Màu chữ */
+    color: #333;
+    font-size: 1em;
 }
 
-/* Style riêng cho nút Add */
+/* Nút Thêm Mới */
 #add-station-btn {
-    margin-top: 0; 
-    margin-bottom: 15px; 
+    margin-bottom: 10px;
     background: var(--color-safe);
     color: white;
     font-weight: bold;
@@ -87,51 +103,35 @@ body {
     border-color: var(--color-safe);
 }
 
-#add-station-btn:hover {
-    background: #157347;
-    color: white;
-}
-
-/* Nút Trạm */
-.station-item:hover {
-    background: #e9ecef;
-}
-
-/* Hiển thị Trạng thái bằng border left */
-.station-item[data-status="danger"] {
-    border-left: 5px solid var(--color-danger);
-    background: #fff3f4; 
-}
-.station-item[data-status="warn"] {
-    border-left: 5px solid var(--color-warn);
-    background: #fffceb;
-}
-.station-item[data-status="safe"] {
-    border-left: 5px solid var(--color-safe);
-    background: #f1f8f1;
-}
+/* Trạng thái màu sắc */
+.station-item[data-status="danger"] { border-left: 5px solid var(--color-danger); background: #fff3f4; }
+.station-item[data-status="warn"] { border-left: 5px solid var(--color-warn); background: #fffceb; }
+.station-item[data-status="safe"] { border-left: 5px solid var(--color-safe); background: #f1f8f1; }
 
 .station-item-name {
     font-weight: bold;
     display: block;
     color: #333;
+    margin-bottom: 2px;
 }
 
 .station-item-id {
     font-size: 0.85em;
-    color: #6c757d;
+    color: #666;
 }
 
-
-/* 4. MAP AREA */
-#map {
-    flex-grow: 1;
-    z-index: 1; 
+/* Nút Sửa nhỏ gọn */
+.btn-edit-sidebar {
+    background: none; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    padding: 5px 8px; 
+    cursor: pointer; 
+    margin-left: 5px;
+    font-size: 1.1em;
 }
 
-/* 5. CUSTOM MARKER (Hiệu ứng tỏa ra) */
-
-/* @keyframes pulse */
+/* --- MARKER ANIMATION --- */
 @keyframes pulse {
     0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4); }
     70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
@@ -139,115 +139,100 @@ body {
 }
 
 .water-marker {
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    border: 3px solid white;
+    border: 2px solid white;
     box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    cursor: pointer;
-    /* ÁP DỤNG HIỆU ỨNG PULSE */
     animation: pulse 2s infinite; 
 }
+.water-marker-nodata { background-color: var(--color-nodata); }
+.water-marker-safe { background-color: var(--color-safe); }
+.water-marker-warn { background-color: var(--color-warn); }
+.water-marker-danger { background-color: var(--color-danger); }
 
-.water-marker-nodata { background-color: var(--color-nodata); border-color: #aaa; }
-.water-marker-safe { background-color: var(--color-safe); border-color: var(--color-safe); }
-.water-marker-warn { background-color: var(--color-warn); border-color: var(--color-warn); }
-.water-marker-danger { background-color: var(--color-danger); border-color: var(--color-danger); }
-
-
-/* 6. MODAL (Tối ưu Form - Ver 04) */
+/* --- MODAL (Responsive) --- */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0,0,0,0.5);
     display: none; 
     justify-content: center;
     align-items: center;
     z-index: 2000;
+    padding: 20px; /* Thêm padding để không dính sát mép trên mobile */
+    box-sizing: border-box;
 }
 
 .modal-content {
     background: white;
-    padding: 30px; /* Tăng padding */
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Bóng đổ mạnh mẽ hơn */
-    width: 380px; /* Tăng chiều rộng */
-    border: 1px solid #ccc;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 400px;
+    max-width: 100%; /* Đảm bảo không tràn màn hình */
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    font-size: 1.6em;
-    color: #007bff;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
-    margin-bottom: 25px; /* Tăng khoảng cách dưới */
-}
+/* --- MEDIA QUERY CHO ĐIỆN THOẠI (Dưới 768px) --- */
+@media (max-width: 768px) {
+    
+    :root {
+        --header-height: 50px; /* Header nhỏ hơn chút */
+    }
 
-.form-group {
-    margin-bottom: 20px; /* Tăng khoảng cách giữa các dòng */
-}
+    /* Chuyển layout sang dọc: Map ở trên, List ở dưới */
+    #main-container {
+        flex-direction: column;
+    }
 
-.form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px; /* Tăng khoảng cách dưới label */
-    color: #555;
-    font-size: 1.1em;
-}
+    /* Map chiếm phần lớn màn hình */
+    #map {
+        order: 1; /* Map lên đầu */
+        flex-basis: 65%; /* Chiếm 65% chiều cao */
+        height: auto; /* Reset height */
+    }
 
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-    border: 1px solid #bbb; /* Border rõ ràng hơn */
-    border-radius: 6px;
-    font-size: 1em;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
+    /* Sidebar (Thanh vị trí) xuống dưới và nhỏ lại */
+    #sidebar {
+        order: 2; /* List xuống dưới */
+        width: 100%; /* Full chiều rộng */
+        height: 35%; /* Chiếm 35% chiều cao còn lại */
+        flex-basis: 35%;
+        border-right: none;
+        border-top: 1px solid #ccc;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
 
-.form-group input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
+    /* Tinh chỉnh list item trên mobile cho gọn */
+    .station-item {
+        padding: 8px;
+        margin-bottom: 4px;
+        font-size: 0.9em; /* Chữ nhỏ hơn */
+    }
+    
+    .station-item-name {
+        font-size: 1.1em;
+    }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end; /* Căn nút sang phải */
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    margin-top: 30px;
-}
+    #add-station-btn {
+        padding: 8px;
+        font-size: 0.95em;
+        margin-bottom: 8px;
+    }
 
-.modal-actions button {
-    padding: 10px 20px;
-    margin-left: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-
-#btn-save {
-    background: #007bff;
-    color: white;
-}
-
-#btn-save:hover {
-    background: #0056b3;
-}
-
-#btn-cancel {
-    background: #6c757d;
-    color: white;
-}
-
-#btn-cancel:hover {
-    background: #5a6268;
+    /* Modal full width trên mobile */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        margin-top: 20px; /* Tránh bị che bởi bàn phím ảo */
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        font-size: 1em;
+    }
 }
