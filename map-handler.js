@@ -1,5 +1,5 @@
-// map-handler.js (Ver 15 - Force No-Cache Headers)
-// - Fix: Thêm headers no-cache vào fetch request...
+// map-handler.js (Ver 17 - Add Config Button to Sidebar)
+// - Fix: Hiển thị nút ⚙️ trong danh sách trạm.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -12,6 +12,15 @@
     let editingStationId = null; 
 
     let configModal, configForm, btnCancel, btnAddStation; 
+
+    // --- UTILITY FUNCTIONS ---
+    // Hàm global để gọi từ popup nếu cần
+    window.editStation = function(stationId) {
+        const station = allStations.find(s => s.id === stationId);
+        if (station) {
+            openConfigModal(station);
+        }
+    };
 
     function getStatus(mucnuoc) {
         if (mucnuoc === null || isNaN(mucnuoc)) return 'nodata';
@@ -33,14 +42,17 @@
         
         const tempDisplay = station.temp !== undefined ? `${station.temp} °C` : 'N/A';
         
+        // Thêm nút Cấu hình vào Popup
         return `
-            <div style="font-family: Arial, sans-serif; min-width: 150px;">
-                <p style="margin: 0 0 5px 0;"><strong>Địa điểm:</strong> ${station.name || 'Chưa đặt tên'}</p>
-                <p style="margin: 0 0 5px 0;"><strong>ID Thiết bị:</strong> ${station.id}</p>
-                <p style="margin: 0 0 5px 0;"><strong>Mực nước:</strong> ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : statusText[status]}</p>
-                <p style="margin: 0 0 5px 0;"><strong>Nhiệt độ:</strong> ${tempDisplay}</p>
-                <p style="margin: 0 0 5px 0;"><strong>Diễn biến:</strong> ${getTrend()}</p>
-                <p style="margin: 0; font-size: 0.8em; color: #666;">Cập nhật: ${station.last_update || 'N/A'}</p>
+            <div style="font-family: Arial, sans-serif; min-width: 180px;">
+                <h3 style="margin: 0 0 5px 0; color: #007bff; font-size: 1.1em;">${station.name || 'Chưa đặt tên'}</h3>
+                <p style="margin: 3px 0;"><strong>ID:</strong> ${station.id}</p>
+                <p style="margin: 3px 0;"><strong>Nước:</strong> ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : statusText[status]}</p>
+                <p style="margin: 3px 0;"><strong>Nhiệt độ:</strong> ${tempDisplay}</p>
+                <p style="margin: 3px 0; font-size: 0.85em; color: #666;">${station.last_update || 'N/A'}</p>
+                <div style="text-align: right; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px;">
+                    <button onclick="window.editStation('${station.id}')" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">⚙️ Cấu hình</button>
+                </div>
             </div>
         `;
     }
@@ -107,34 +119,40 @@
             li.dataset.id = station.id;
             li.dataset.status = status; 
             
+            // Layout HTML cho item sidebar với nút sửa
             li.innerHTML = `
-                <span class="station-item-name">${station.name || 'Chưa đặt tên'}</span>
-                <span class="station-item-id">ID: ${station.id} | Nước: ${station.mucnuoc !== null ? station.mucnuoc + ' cm' : 'No Data'} | Nhiệt độ: ${tempDisplay}</span>
+                <div class="station-info">
+                    <span class="station-item-name">${station.name || 'Chưa đặt tên'}</span>
+                    <span class="station-item-id">ID: ${station.id} | ${station.mucnuoc !== null ? station.mucnuoc + 'cm' : '--'} | ${tempDisplay}</span>
+                </div>
+                <button class="btn-edit-sidebar" title="Cài đặt điểm này">⚙️</button>
             `;
+            
+            // Sự kiện Click vào dòng -> Di chuyển map
             li.addEventListener('click', () => {
                 map.setView([station.lat, station.lon], 16);
+            });
+            
+            // Sự kiện Click nút Sửa -> Mở Modal (Ngăn không cho kích hoạt click dòng)
+            const btnEdit = li.querySelector('.btn-edit-sidebar');
+            btnEdit.addEventListener('click', (e) => {
+                e.stopPropagation(); // Ngừng lan truyền sự kiện để không di chuyển map
                 openConfigModal(station);
             });
+            
             list.appendChild(li);
         });
     }
 
     async function loadStations() {
         try {
-            // [FIX CACHE]: Thêm timestamp và header no-cache
             const cacheBuster = `?v=${new Date().getTime()}`;
             const res = await fetch(`${API_BASE_URL}/get-locations.php${cacheBuster}`, {
-                cache: "no-store", // Bắt buộc không dùng cache
-                headers: {
-                    'Pragma': 'no-cache',
-                    'Cache-Control': 'no-cache'
-                }
+                cache: "no-store",
+                headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
             });
             
-            if (!res.ok) {
-                console.error(`Lỗi tải dữ liệu: HTTP ${res.status}`);
-                return;
-            }
+            if (!res.ok) return;
             allStations = await res.json();
             
             if (!Array.isArray(allStations)) allStations = [];
@@ -144,7 +162,7 @@
             renderMarkers();
             
         } catch (err) {
-            console.error('Lỗi khi tải dữ liệu trạm:', err);
+            console.error('Lỗi tải dữ liệu:', err);
         }
     }
 
