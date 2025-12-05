@@ -1,30 +1,31 @@
 <?php
-// send-data.php (Ver 05 - Fix Warning Float to Int Precision)
-// Nhận chuỗi: ?id=F01790;date=15/05/2025;time=16:25;mucnuoc=10;vol=125;
+// send-data.php (Ver 06 - Fix Deprecated Warning & Force No-Cache)
+// Cập nhật: T00001, Mn=70, Vol=12.5...
 
+// 1. HEADER CHỐNG CACHE (Cực mạnh)
 header('Content-Type: application/json; charset=utf-8');
-// Thêm header để ngăn trình duyệt cache phản hồi này
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 
 date_default_timezone_set('Asia/Ho_Chi_Minh');
-
 $dataFile = __DIR__ . '/locations.json';
 
-// --- HÀM MÔ PHỎNG NHIỆT ĐỘ (Đã Fix Lỗi) ---
+// 2. HÀM MÔ PHỎNG NHIỆT ĐỘ (Dùng fmod để tránh lỗi float-to-int)
 function getRealTimeTemperature($lat, $lon) {
     $baseTemp = 28; 
-    // [FIX]: Ép kiểu (int) để tránh lỗi "Implicit conversion from float..."
-    $noise = (int)(($lat + $lon) * 100) % 5; 
+    // Dùng fmod cho phép chia dư số thực mà không báo lỗi
+    $noise = fmod(($lat + $lon) * 100, 5); 
     $temp = $baseTemp + ($noise * 0.5) - 1.5;
     return round($temp, 1);
 }
 
-// --- 1. PHÂN TÍCH DỮ LIỆU ---
+// 3. PHÂN TÍCH DỮ LIỆU
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
 $data = [];
 
+// Ưu tiên xử lý chuỗi A7600 (phân tách bằng ;)
 if (strpos($queryString, ';') !== false) {
     $pairs = explode(';', $queryString);
     foreach ($pairs as $pair) {
@@ -39,19 +40,20 @@ if (strpos($queryString, ';') !== false) {
 }
 
 $id = isset($data['id']) ? trim($data['id']) : '';
-$mucnuoc = isset($data['mucnuoc']) ? filter_var($data['mucnuoc'], FILTER_VALIDATE_INT) : null;
-$vol = isset($data['vol']) ? filter_var($data['vol'], FILTER_VALIDATE_FLOAT) : null;
+// Fix: Chấp nhận cả số thực cho mucnuoc nhưng ép về int
+$mucnuoc = isset($data['mn']) ? (int)$data['mn'] : (isset($data['mucnuoc']) ? (int)$data['mucnuoc'] : null);
+$vol = isset($data['vol']) ? (float)$data['vol'] : null;
 $received_date = $data['date'] ?? null;
 $received_time = $data['time'] ?? null;
 
-// --- 2. KIỂM TRA ---
+// 4. KIỂM TRA
 if (!$id) {
     http_response_code(400); 
     echo json_encode(['status' => 'error', 'message' => 'Missing ID']);
     exit;
 }
 
-// --- 3. ĐỌC FILE ---
+// 5. ĐỌC FILE
 $locations = [];
 if (file_exists($dataFile)) {
     $jsonContent = @file_get_contents($dataFile);
@@ -59,7 +61,7 @@ if (file_exists($dataFile)) {
     if (!is_array($locations)) $locations = [];
 }
 
-// --- 4. CẬP NHẬT ---
+// 6. CẬP NHẬT
 $found = false;
 foreach ($locations as &$station) {
     if (isset($station['id']) && $station['id'] === $id) {
@@ -76,6 +78,7 @@ foreach ($locations as &$station) {
         if ($received_date && $received_time) {
             $dParts = explode('/', $received_date);
             if (count($dParts) === 3) {
+                // Chuyen doi DD/MM/YYYY thanh YYYY-MM-DD
                 $station['last_update'] = "{$dParts[2]}-{$dParts[1]}-{$dParts[0]} {$received_time}:00";
             } else {
                 $station['last_update'] = date('Y-m-d H:i:s');
@@ -91,17 +94,18 @@ foreach ($locations as &$station) {
 unset($station);
 
 if (!$found) {
+    // Nếu không tìm thấy ID, báo lỗi để biết đường config lại
     http_response_code(404);
-    echo json_encode(['status' => 'error', 'message' => 'Station ID not found: ' . $id]);
+    echo json_encode(['status' => 'error', 'message' => 'ID not found in locations.json: ' . $id]);
     exit;
 }
 
-// --- 5. GHI FILE ---
+// 7. GHI FILE
 $json_flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE;
 if (defined('JSON_NUMERIC_CHECK')) $json_flags |= JSON_NUMERIC_CHECK;
 
 if (@file_put_contents($dataFile, json_encode($locations, $json_flags))) {
-    echo json_encode(['status' => 'success', 'message' => 'Updated ID: ' . $id]);
+    echo json_encode(['status' => 'success', 'message' => 'Updated ID: ' . $id, 'level' => $mucnuoc]);
 } else {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Write failed']);
