@@ -1,79 +1,101 @@
-<!-- index.html (Ver 02 - Đảm bảo cấu trúc Modal Cấu hình) -->
-<!-- Phiên bản này giữ nguyên cấu trúc index.html đã có, chỉ đảm bảo các ID DOM khớp với JS -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hệ Thống Cảnh Báo Ngập Thành Phố</title>
-    <!-- Thư viện bản đồ Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <!-- File CSS tùy chỉnh (sẽ được thêm bởi script dưới đây) -->
-    <link id="main-stylesheet" rel="stylesheet" href="">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Cảnh Báo Ngập 2025</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Main CSS (Sẽ được JS load lại để tránh cache) -->
+    <link id="main-stylesheet" rel="stylesheet" href="styles.css">
+    
+    <link rel="icon" href="data:,">
 </head>
 <body>
 
-    <!-- Tiêu đề trang -->
-    <header id="header">
-        <h1>Hệ Thống Cảnh Báo Ngập Thành Phố</h1>
-    </header>
-    
-    <!-- Container chính chứa Sidebar và Bản đồ -->
-    <div id="main-container">
-        
-        <!-- Thanh công cụ bên trái -->
-        <aside id="sidebar">
-            <div id="sidebar-header">
-                <h2>Danh sách Trạm</h2>
-            </div>
-            <ul id="station-list">
-                <!-- Danh sách các trạm sẽ được JS chèn vào đây -->
-            </ul>
-            <button id="add-station-btn" class="sidebar-footer-btn">Thêm Khu Vực Mới</button>
-        </aside>
-        
-        <!-- Khu vực hiển thị bản đồ -->
-        <main id="map"></main>
+    <!-- 1. HEADER -->
+    <div id="header">
+        <h1>HỆ THỐNG CẢNH BÁO NGẬP LỤT TRỰC TUYẾN 2025</h1>
     </div>
 
-    <!-- MODAL CẤU HÌNH -->
-    <div id="config-modal" class="modal">
+    <!-- 2. MAIN CONTAINER -->
+    <div id="main-container">
+        
+        <!-- SIDEBAR (Thanh vị trí) -->
+        <div id="sidebar">
+            <div style="padding: 15px; border-bottom: 1px solid #ddd; background: #fff;">
+                <button id="add-station-btn">+ THÊM KHU VỰC MỚI</button>
+            </div>
+            
+            <div id="station-list-container">
+                <ul id="station-list">
+                    <!-- Danh sách trạm sẽ được JS render vào đây -->
+                    <li style="padding: 20px; text-align: center; color: #666;">Đang tải dữ liệu...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MAP (Bản đồ) -->
+        <div id="map"></div>
+    </div>
+
+    <!-- 3. MODAL CẤU HÌNH (Khung cài đặt bị thiếu) -->
+    <div id="config-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Cấu hình Trạm</h2>
+            <h2>Cấu Hình Điểm Cảnh Báo</h2>
+            
             <form id="config-form">
+                <!-- Tên trạm -->
                 <div class="form-group">
-                    <label for="config-name">Tên Địa điểm</label>
-                    <input type="text" id="config-name" required placeholder="Ví dụ: Đinh Tiên Hoàng">
+                    <label for="config-name">Tên Gợi Nhớ:</label>
+                    <input type="text" id="config-name" required placeholder="Ví dụ: Ngã ba Trần Hưng Đạo..." autocomplete="off">
                 </div>
+
+                <!-- ID Thiết bị -->
                 <div class="form-group">
-                    <label for="config-id">ID Thiết bị</label>
-                    <input type="text" id="config-id" required placeholder="Ví dụ: F01234">
+                    <label for="config-id">ID Thiết Bị (Khớp với Chip):</label>
+                    <input type="text" id="config-id" required placeholder="Ví dụ: T00001" autocomplete="off">
+                    <small style="color: #dc3545; display: block; margin-top: 5px; font-style: italic;">
+                        * Lưu ý: ID này không được sửa sau khi tạo, phải trùng với code nạp trong Chip.
+                    </small>
                 </div>
+
+                <!-- Tọa độ -->
                 <div class="form-group">
-                    <label for="config-lat-lon">Tọa độ (vĩ độ, kinh độ)</label>
-                    <input type="text" id="config-lat-lon" required placeholder="Ví dụ: 20.2533, 105.9754">
+                    <label for="config-lat-lon">Tọa độ (Vĩ độ, Kinh độ):</label>
+                    <input type="text" id="config-lat-lon" required placeholder="VD: 20.2647, 105.9754" autocomplete="off">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        * Mẹo: Click chuột phải vào Google Maps để lấy số này.
+                    </small>
                 </div>
+                
+                <!-- Nút bấm -->
                 <div class="modal-actions">
-                    <button type="button" id="btn-delete" class="btn-danger">Xóa</button>
-                    <button type="button" id="btn-cancel" class="btn-primary" onclick="window.closeConfigModal()">Hủy</button>
-                    <button type="submit" id="btn-save" class="btn-primary">Lưu Thay Đổi</button>
+                    <button type="button" id="btn-cancel">Hủy Bỏ</button>
+                    <button type="submit" id="btn-save">Lưu Cấu Hình</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Script thư viện bản đồ Leaflet -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- === PHẦN SỬA LỖI QUAN TRỌNG NHẤT === -->
-    <!-- Script này sẽ tải file CSS và JS với một mã ngẫu nhiên để phá vỡ cache -->
+    <!-- Script Loader (Chống Cache) -->
     <script>
-        const cacheBuster = `?v=${Date.now()}`;
-        document.getElementById('main-stylesheet').href = 'styles.css' + cacheBuster;
+        // Tạo timestamp để ép trình duyệt tải file mới nhất
+        const v = Date.now();
         
+        // 1. Reload CSS
+        document.getElementById('main-stylesheet').href = 'styles.css?v=' + v;
+        
+        // 2. Load JS
         const script = document.createElement('script');
-        script.src = 'map-handler.js' + cacheBuster;
+        script.src = 'map-handler.js?v=' + v;
         document.body.appendChild(script);
     </script>
+
 </body>
 </html>
