@@ -1,5 +1,5 @@
-// map-handler.js (Ver 14 - Fix Cache Web Update)
-// - Fix: Thêm timestamp vào URL fetch để tránh cache trình duyệt.
+// map-handler.js (Ver 15 - Force No-Cache Headers)
+// - Fix: Thêm headers no-cache vào fetch request.
 
 (function() {
     const API_BASE_URL = window.location.origin; 
@@ -13,7 +13,6 @@
 
     let configModal, configForm, btnCancel, btnAddStation; 
 
-    // --- UTILITY FUNCTIONS ---
     function getStatus(mucnuoc) {
         if (mucnuoc === null || isNaN(mucnuoc)) return 'nodata';
         if (mucnuoc >= 40) return 'danger';    
@@ -64,7 +63,6 @@
         editingStationId = null;
     }
 
-    // --- RENDERING ---
     function renderMarkers() {
         markersLayer.clearLayers();
         allStations.forEach(station => {
@@ -123,9 +121,15 @@
 
     async function loadStations() {
         try {
-            // [FIX CACHE]: Thêm ?v=Timestamp để bắt trình duyệt tải file mới nhất
+            // [FIX CACHE]: Thêm timestamp và header no-cache
             const cacheBuster = `?v=${new Date().getTime()}`;
-            const res = await fetch(`${API_BASE_URL}/get-locations.php${cacheBuster}`);
+            const res = await fetch(`${API_BASE_URL}/get-locations.php${cacheBuster}`, {
+                cache: "no-store", // Bắt buộc không dùng cache
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            });
             
             if (!res.ok) {
                 console.error(`Lỗi tải dữ liệu: HTTP ${res.status}`);
@@ -138,9 +142,6 @@
 
             renderSidebar();
             renderMarkers();
-            
-            // Chỉ set view lần đầu hoặc khi chưa có trạm nào
-            // Nếu muốn map giữ vị trí khi cập nhật tự động thì bỏ qua setView ở đây
             
         } catch (err) {
             console.error('Lỗi khi tải dữ liệu trạm:', err);
