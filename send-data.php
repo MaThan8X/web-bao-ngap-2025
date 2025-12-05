@@ -1,130 +1,113 @@
 <?php
-// send-data.php (Ver 03 - Hỗ trợ chuỗi query A7600 và Tích hợp Nhiệt độ Mô phỏng)
+// send-data.php (Ver 04 - Fix Update Logic & Parse String A7600)
 // Nhận chuỗi: ?id=F01790;date=15/05/2025;time=16:25;mucnuoc=10;vol=125;
-// Tự lấy nhiệt độ (temp) bằng cách mô phỏng.
+// Cập nhật locations.json chính xác.
 
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-// Đường dẫn tới file lưu trữ trạng thái cấu hình
 $dataFile = __DIR__ . '/locations.json';
 
-// --- HÀM 1: LẤY NHIỆT ĐỘ THỰC TẾ (MÔ PHỎNG) ---
-// *******************************************************************
-// CHÚ Ý: CHỦ NHÂN CẦN THAY THẾ HÀM NÀY BẰNG API CALL THỰC TẾ (VD: OpenWeatherMap)
-// Sau khi có API Key, Chủ nhân hãy thay thế bằng cURL hoặc file_get_contents 
-// để gọi đến API thời tiết sử dụng $lat và $lon.
-// *******************************************************************
+// --- HÀM MÔ PHỎNG NHIỆT ĐỘ ---
 function getRealTimeTemperature($lat, $lon) {
-    // Mô phỏng nhiệt độ thực tế của miền Bắc Việt Nam (25-35 độ C)
-    // Sử dụng tọa độ để tạo độ ngẫu nhiên nhỏ (tính năng phụ)
-    $baseTemp = 28; // Nhiệt độ cơ bản (Celsius)
-    $noise = (($lat + $lon) * 100) % 5; // Độ ngẫu nhiên nhỏ dựa trên tọa độ
-    $temp = $baseTemp + 0.5 + ($noise * 0.5) - 2;
+    // Mô phỏng nhiệt độ miền Bắc (20-35 độ C)
+    // Dùng lat/lon để tạo sự khác biệt nhỏ giữa các trạm
+    $baseTemp = 28; 
+    $noise = (($lat + $lon) * 100) % 5; 
+    $temp = $baseTemp + ($noise * 0.5) - 1.5;
     return round($temp, 1);
 }
 
-// --- 2. Lấy và Phân tích dữ liệu từ thiết bị (Chuỗi không tiêu chuẩn) ---
+// --- 1. PHÂN TÍCH DỮ LIỆU TỪ THIẾT BỊ ---
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
 $data = [];
 
-// Phân tích chuỗi query bằng dấu chấm phẩy (;)
-$pairs = explode(';', $queryString);
-foreach ($pairs as $pair) {
-    $pair = trim($pair);
-    if (strpos($pair, '=') !== false) {
-        list($key, $value) = explode('=', $pair, 2);
-        $data[trim($key)] = trim($value);
+// Xử lý chuỗi query A7600 (phân tách bằng ;)
+if (strpos($queryString, ';') !== false) {
+    $pairs = explode(';', $queryString);
+    foreach ($pairs as $pair) {
+        $pair = trim($pair);
+        if (strpos($pair, '=') !== false) {
+            list($key, $value) = explode('=', $pair, 2);
+            $data[trim($key)] = trim($value);
+        }
     }
+} else {
+    // Fallback: Xử lý chuỗi tiêu chuẩn (&) nếu thiết bị gửi đúng chuẩn
+    $data = $_GET;
 }
 
-// Lọc và chuẩn hóa dữ liệu
-$id      = $data['id'] ?? '';
-$mucnuoc = filter_var($data['mucnuoc'] ?? null, FILTER_VALIDATE_INT);
-$vol     = filter_var($data['vol'] ?? null, FILTER_VALIDATE_FLOAT);
+// Lấy dữ liệu
+$id = isset($data['id']) ? trim($data['id']) : '';
+$mucnuoc = isset($data['mucnuoc']) ? filter_var($data['mucnuoc'], FILTER_VALIDATE_INT) : null;
+$vol = isset($data['vol']) ? filter_var($data['vol'], FILTER_VALIDATE_FLOAT) : null;
 $received_date = $data['date'] ?? null;
 $received_time = $data['time'] ?? null;
 
-// --- 3. Kiểm tra điều kiện bắt buộc ---
+// --- 2. KIỂM TRA ĐIỀU KIỆN ---
 if (!$id) {
     http_response_code(400); 
-    echo json_encode(['status' => 'error', 'message' => 'Missing required parameter: id']);
+    echo json_encode(['status' => 'error', 'message' => 'Missing ID']);
     exit;
 }
 
-if ($mucnuoc === null && $vol === null) {
-    http_response_code(400); 
-    echo json_encode(['status' => 'error', 'message' => 'Missing measurement data (mucnuoc or vol)']);
-    exit;
-}
-
-// --- 4. Đọc và giải mã dữ liệu hiện có (locations.json) ---
+// --- 3. ĐỌC DỮ LIỆU CŨ ---
 $locations = [];
-$stationIndex = -1;
-
 if (file_exists($dataFile)) {
-    $jsonContent = file_get_contents($dataFile);
+    $jsonContent = @file_get_contents($dataFile);
     $locations = json_decode($jsonContent, true);
-    if (!is_array($locations)) {
-        $locations = [];
-    }
+    if (!is_array($locations)) $locations = [];
 }
 
-// --- 5. Tìm và cập nhật trạng thái của trạm ---
-foreach ($locations as $index => &$station) {
-    if (($station['id'] ?? '') === $id) {
-        $stationIndex = $index;
+// --- 4. CẬP NHẬT TRẠM ---
+$found = false;
+foreach ($locations as &$station) {
+    if (isset($station['id']) && $station['id'] === $id) {
         
-        // Lấy tọa độ để tính nhiệt độ
-        $lat = $station['lat'] ?? 0; 
+        // Cập nhật giá trị đo
+        if ($mucnuoc !== null) $station['mucnuoc'] = $mucnuoc;
+        if ($vol !== null) $station['vol'] = $vol;
+        
+        // Cập nhật Nhiệt độ (Mô phỏng)
+        $lat = $station['lat'] ?? 0;
         $lon = $station['lon'] ?? 0;
+        $station['temp'] = getRealTimeTemperature($lat, $lon);
         
-        // Cập nhật Mực nước và Điện áp
-        if ($mucnuoc !== null) {
-            $station['mucnuoc'] = (int)$mucnuoc;
-        }
-        if ($vol !== null) {
-            $station['vol'] = (float)$vol;
-        }
-        
-        // LẤY VÀ CẬP NHẬT NHIỆT ĐỘ TỪ MÔ PHỎNG
-        $station['temp'] = getRealTimeTemperature($lat, $lon); 
-        
-        // Cập nhật thời gian nhận
+        // Cập nhật Thời gian
         if ($received_date && $received_time) {
-            $date_parts = explode('/', $received_date);
-            if (count($date_parts) === 3) {
-                $formatted_date = "{$date_parts[2]}-{$date_parts[1]}-{$date_parts[0]}";
-                $station['last_update'] = $formatted_date . ' ' . $received_time . ':00';
+            // Chuyển format DD/MM/YYYY -> YYYY-MM-DD
+            $dParts = explode('/', $received_date);
+            if (count($dParts) === 3) {
+                $station['last_update'] = "{$dParts[2]}-{$dParts[1]}-{$dParts[0]} {$received_time}:00";
             } else {
-                 $station['last_update'] = date('Y-m-d H:i:s');
+                $station['last_update'] = date('Y-m-d H:i:s');
             }
         } else {
             $station['last_update'] = date('Y-m-d H:i:s');
         }
         
-        break;
+        $found = true;
+        break; // Dừng vòng lặp khi tìm thấy
     }
 }
-unset($station); 
+unset($station); // Ngắt tham chiếu
 
-// --- 6. Xử lý khi ID không tồn tại trong cấu hình ---
-if ($stationIndex === -1) {
+// --- 5. XỬ LÝ KHI KHÔNG TÌM THẤY ID ---
+if (!$found) {
+    // Tùy chọn: Có thể tự động tạo trạm mới nếu muốn, hoặc báo lỗi.
+    // Ở đây ta báo lỗi để đảm bảo chỉ cập nhật trạm đã cấu hình.
     http_response_code(404);
-    echo json_encode(['status' => 'error', 'message' => 'Station ID not found in configuration: ' . $id]);
+    echo json_encode(['status' => 'error', 'message' => 'Station ID not found: ' . $id]);
     exit;
 }
 
-// --- 7. Ghi dữ liệu đã cập nhật vào file (Cần CHMOD 777) ---
+// --- 6. GHI FILE ---
 $json_flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE;
-if (defined('JSON_NUMERIC_CHECK')) {
-    $json_flags |= JSON_NUMERIC_CHECK;
-}
+if (defined('JSON_NUMERIC_CHECK')) $json_flags |= JSON_NUMERIC_CHECK;
 
-if (false !== @file_put_contents($dataFile, json_encode($locations, $json_flags))) {
-    echo json_encode(['status' => 'success', 'message' => 'Data updated for id: ' . $id]);
+if (@file_put_contents($dataFile, json_encode($locations, $json_flags))) {
+    echo json_encode(['status' => 'success', 'message' => 'Updated ID: ' . $id]);
 } else {
-    http_response_code(500); 
-    $error = error_get_last()['message'] ?? 'Failed to write data. Check file permissions (chmod 777).';
-    echo json_encode(['status' => 'error', 'message' => 'Failed to write data: ' . $error]);
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Write failed']);
 }
